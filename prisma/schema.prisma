@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model User {
+  id            String            @id @default(cuid())
+  name          String?
+  email         String?           @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          UserRole          @default(USER)
+  accounts      Account[]
+  sessions      Session[]
+  schools       SchoolUser[]
+  guardians     GuardianStudent[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+enum SchoolType {
+  HOME
+  CENTER
+  MULTI_SITE
+}
+
+model School {
+  id         String       @id @default(cuid())
+  name       String
+  address    String?
+  phone      String?
+  type       SchoolType   @default(HOME)
+  capacity   Int?         @default(0)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime?    @updatedAt
+  users      SchoolUser[]
+  classrooms Classroom[]
+  students   Student[]
+}
+
+model SchoolUser {
+  id        String     @id @default(cuid())
+  schoolId  String
+  userId    String
+  role      SchoolRole @default(TEACHER)
+  school    School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime?  @updatedAt
+
+  @@unique([schoolId, userId])
+}
+
+model Classroom {
+  id        String    @id @default(cuid())
+  name      String
+  schoolId  String
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  students  Student[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model Student {
+  id          String            @id @default(cuid())
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime?
+  schoolId    String
+  classroomId String
+  school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroom   Classroom         @relation(fields: [classroomId], references: [id])
+  guardians   GuardianStudent[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime?         @updatedAt
+}
+
+model GuardianStudent {
+  id        String    @id @default(cuid())
+  userId    String
+  studentId String
+  relation  String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@unique([userId, studentId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SchoolRole {
+  ADMINISTRATOR
+  TEACHER
+  STAFF
+}
