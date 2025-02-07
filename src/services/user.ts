@@ -68,9 +68,8 @@ export const userService = {
         throw new UserServiceError("Invalid credentials");
       }
 
-      console.log({ user });
-
       // Get the user's school information
+      // console.log({ user });
 
       const userWithoutPassword = omitPassword(user);
 
