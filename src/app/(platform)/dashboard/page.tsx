@@ -1,7 +1,7 @@
+import { authOptions } from "@/_lib/session";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
 import User from "./user";
 
 export default async function DashboardPage() {

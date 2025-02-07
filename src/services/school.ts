@@ -1,16 +1,13 @@
-import { prisma } from "@/lib/prisma";
-import { School, SchoolRole, SchoolType } from "@prisma/client";
+import { prisma } from "@/_lib/prisma";
+import { Prisma, School, SchoolType, User } from "@prisma/client";
 
-export interface CreateSchoolData {
-  name: string;
-  phone?: string;
-  type: SchoolType;
-  capacity?: number;
-  userId: string;
-}
+export type SchoolWithUser = School & {
+  user: User;
+};
 
 export interface UpdateSchoolData {
   name?: string;
+  slug?: string;
   phone?: string;
   type?: SchoolType;
   capacity?: number;
@@ -24,57 +21,23 @@ class SchoolServiceError extends Error {
 }
 
 export const schoolService = {
-  async createSchool(data: CreateSchoolData): Promise<School> {
+  async createSchool(data: Prisma.SchoolCreateInput): Promise<School> {
     try {
-      // Create school
-      const school = await prisma.school.create({
-        data: {
-          name: data.name,
-          phone: data.phone,
-          type: data.type,
-        },
+      const existingSchool = await prisma.school.findFirst({
+        where: { slug: data.slug },
       });
 
-      // Associate user with school as administrator
-      await prisma.schoolUser.create({
-        data: {
-          userId: data.userId,
-          schoolId: school.id,
-          role: SchoolRole.ADMINISTRATOR,
-        },
-      });
+      if (existingSchool) {
+        throw new SchoolServiceError("School with this slug already exists");
+      }
 
-      return school;
+      const result = await prisma.school.create({ data });
+
+      return result;
     } catch (error) {
       if (error instanceof SchoolServiceError) throw error;
       console.error("Error creating school:", error);
       throw new SchoolServiceError("Failed to create school");
-    }
-  },
-
-  async updateSchool(
-    schoolId: string,
-    data: UpdateSchoolData
-  ): Promise<School> {
-    try {
-      const school = await prisma.school.findUnique({
-        where: { id: schoolId },
-      });
-
-      if (!school) {
-        throw new SchoolServiceError("School not found");
-      }
-
-      const updatedSchool = await prisma.school.update({
-        where: { id: schoolId },
-        data,
-      });
-
-      return updatedSchool;
-    } catch (error) {
-      if (error instanceof SchoolServiceError) throw error;
-      console.error("Error updating school:", error);
-      throw new SchoolServiceError("Failed to update school");
     }
   },
 
@@ -88,20 +51,6 @@ export const schoolService = {
     } catch (error) {
       console.error("Error finding school:", error);
       throw new SchoolServiceError("Failed to find school");
-    }
-  },
-
-  async findSchoolsByUserId(userId: string): Promise<School[]> {
-    try {
-      const schoolUsers = await prisma.schoolUser.findMany({
-        where: { userId },
-        include: { school: true },
-      });
-
-      return schoolUsers.map((su) => su.school);
-    } catch (error) {
-      console.error("Error finding schools for user:", error);
-      throw new SchoolServiceError("Failed to find schools for user");
     }
   },
 };

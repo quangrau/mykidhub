@@ -32,7 +32,7 @@ export function SigninForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "admin@mykidhub.com",
-      password: "123456@",
+      password: "1234567890",
     },
   });
 
@@ -40,6 +40,7 @@ export function SigninForm() {
     setIsLoading(true);
 
     try {
+      // 1. Verify email and password
       const response = await signIn("credentials", {
         email: values.email,
         password: values.password,
@@ -51,7 +52,8 @@ export function SigninForm() {
           message: "Invalid email or password",
         });
       } else {
-        router.push("/dashboard");
+        // 3. Redirect to dashboard
+        router.push("/");
         router.refresh();
       }
     } catch (error) {

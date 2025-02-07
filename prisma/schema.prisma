@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model Account {
@@ -31,24 +32,6 @@ model Account {
   @@id([provider, providerAccountId])
 }
 
-model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-}
-
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@id([identifier, token])
-}
-
 model User {
   id            String            @id @default(cuid())
   name          String?
@@ -56,11 +39,11 @@ model User {
   emailVerified DateTime?
   password      String?
   image         String?
-  role          UserRole          @default(USER)
   accounts      Account[]
-  sessions      Session[]
-  schools       SchoolUser[]
   guardians     GuardianStudent[]
+  school        School?           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId      String?
+  schoolRole    SchoolRole        @default(TEACHER)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
@@ -73,30 +56,18 @@ enum SchoolType {
 }
 
 model School {
-  id         String       @id @default(cuid())
+  id         String      @id @default(cuid())
   name       String
+  slug       String      @unique
   address    String?
   phone      String?
-  type       SchoolType   @default(HOME)
-  capacity   Int?         @default(0)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime?    @updatedAt
-  users      SchoolUser[]
+  type       SchoolType  @default(HOME)
+  capacity   Int?        @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime?   @updatedAt
+  users      User[]
   classrooms Classroom[]
   students   Student[]
-}
-
-model SchoolUser {
-  id        String     @id @default(cuid())
-  schoolId  String
-  userId    String
-  role      SchoolRole @default(TEACHER)
-  school    School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime?  @updatedAt
-
-  @@unique([schoolId, userId])
 }
 
 model Classroom {

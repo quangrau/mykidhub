@@ -1,6 +1,6 @@
 "use client";
 
-import { signup } from "@/app/actions/auth";
+import { signup } from "@/app/signup/actions";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,26 +11,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  userName: z.string().min(2, "Name must be at least 2 characters"),
+  userEmail: z.string().email("Invalid email address"),
+  userPassword: z.string().min(6, "Password must be at least 6 characters"),
   schoolName: z.string().min(2, "School name must be at least 2 characters"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  childCareType: z.string().min(1, "Please select a child care type"),
+  schoolPhone: z.string().min(10, "Phone number must be at least 10 digits"),
+  schoolCapacity: z.number().min(1, "Capacity must be at least 1"),
 });
 
 export function SignupForm() {
@@ -40,12 +34,12 @@ export function SignupForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      schoolName: "",
-      phone: "",
-      childCareType: "",
+      userName: "Alex Le",
+      userEmail: "admin@mykidhub.com",
+      userPassword: "1234567890",
+      schoolName: "My Kid Hub",
+      schoolPhone: "1234567890",
+      schoolCapacity: 1,
     },
   });
 
@@ -53,13 +47,27 @@ export function SignupForm() {
     setIsLoading(true);
 
     try {
+      // Signup
       const result = await signup(values);
 
-      if (result.success) {
-        router.push("/dashboard");
-      } else {
+      if (!result.success) {
         console.error("Signup failed:", result.error);
+        return;
       }
+
+      // SignIn after signup successfully
+      const authResult = await signIn("credentials", {
+        email: values.userEmail,
+        password: values.userPassword,
+        redirect: false,
+      });
+
+      if (!authResult?.ok) {
+        console.error("SignIn failed:", authResult?.error);
+        return;
+      }
+
+      router.push("/dashboard");
     } catch (error) {
       console.error(error);
     } finally {
@@ -72,7 +80,7 @@ export function SignupForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="name"
+          name="userName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Your name</FormLabel>
@@ -100,7 +108,7 @@ export function SignupForm() {
 
         <FormField
           control={form.control}
-          name="email"
+          name="userEmail"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -118,7 +126,7 @@ export function SignupForm() {
 
         <FormField
           control={form.control}
-          name="password"
+          name="userPassword"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
@@ -136,36 +144,13 @@ export function SignupForm() {
 
         <FormField
           control={form.control}
-          name="phone"
+          name="schoolPhone"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
                 <Input placeholder="(XXX) XXX-XXXX" {...field} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="childCareType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Child care type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an option" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="daycare">Daycare</SelectItem>
-                  <SelectItem value="preschool">Preschool</SelectItem>
-                  <SelectItem value="kindergarten">Kindergarten</SelectItem>
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
