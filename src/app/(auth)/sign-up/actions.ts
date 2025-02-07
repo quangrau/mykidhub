@@ -1,6 +1,6 @@
 "use server";
 
-import { generateSlug, hashPassword } from "@/_lib/utils";
+import { generateSlug, hashPassword } from "@/lib/utils";
 import schoolService from "@/services/school";
 import { SchoolRole } from "@prisma/client";
 import { z } from "zod";

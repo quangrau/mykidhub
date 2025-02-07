@@ -2,6 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Form,
   FormControl,
   FormField,
@@ -10,8 +17,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,7 +33,9 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function SigninForm() {
+export function SigninForm({
+  className,
+}: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -67,55 +78,83 @@ export function SigninForm() {
   }
 
   return (
-    <div className="mx-auto max-w-sm space-y-8">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Sign In</h1>
-        <p className="text-gray-500 dark:text-gray-400">
-          Enter your email and password to access your account
-        </p>
+    <div className={cn("flex flex-col gap-6", className)}>
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">Welcome back</CardTitle>
+          <CardDescription>Login with your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="grid gap-6">
+                <div className="grid gap-6">
+                  <div className="grid gap-2">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="m@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Enter your password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {form.formState.errors.root && (
+                    <div className="text-sm text-red-500 dark:text-red-400">
+                      {form.formState.errors.root.message}
+                    </div>
+                  )}
+                  <Button className="w-full" type="submit" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </div>
+                <div className="text-center text-sm">
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href="/sign-up"
+                    className="underline underline-offset-4"
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              </div>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+      <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary  ">
+        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
+        and <a href="#">Privacy Policy</a>.
       </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input type="email" placeholder="m@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Enter your password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {form.formState.errors.root && (
-            <div className="text-sm text-red-500 dark:text-red-400">
-              {form.formState.errors.root.message}
-            </div>
-          )}
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
-      </Form>
     </div>
   );
 }

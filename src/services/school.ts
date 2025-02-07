@@ -1,4 +1,4 @@
-import { prisma } from "@/_lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { Prisma, School, SchoolType, User } from "@prisma/client";
 
 export type SchoolWithUser = School & {

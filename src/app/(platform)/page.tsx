@@ -1,3 +1,3 @@
-export default function Home() {
-  return <h1> My Kid Hub</h1>;
+export default async function Home() {
+  return <div className="container mx-auto py-8">Hello</div>;
 }

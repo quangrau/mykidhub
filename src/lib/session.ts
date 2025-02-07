@@ -1,4 +1,4 @@
-import { prisma } from "@/_lib/prisma";
+import { prisma } from "@/lib/prisma";
 import userService, { UserWithSchool } from "@/services/user";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";

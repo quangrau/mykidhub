@@ -1,6 +1,6 @@
 "use client";
 
-import { signup } from "@/app/signup/actions";
+import { signup } from "@/app/(auth)/sign-up/actions";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,9 @@ const formSchema = z.object({
   schoolCapacity: z.number().min(1, "Capacity must be at least 1"),
 });
 
-export function SignupForm() {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {}
+
+export function SignupForm({ className }: Props) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -76,90 +79,92 @@ export function SignupForm() {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="userName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Your name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Smith" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className={cn("grid gap-6", className)}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="userName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Your name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John Smith" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="schoolName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>School name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter school name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="schoolName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>School name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter school name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="userEmail"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter email address"
-                  type="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="userEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter email address"
+                    type="email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="userPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter password"
-                  type="password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="userPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter password"
+                    type="password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="schoolPhone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone</FormLabel>
-              <FormControl>
-                <Input placeholder="(XXX) XXX-XXXX" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="schoolPhone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="(XXX) XXX-XXXX" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button className="w-full" type="submit" disabled={isLoading}>
-          Create school
-        </Button>
-      </form>
-    </Form>
+          <Button className="w-full" type="submit" disabled={isLoading}>
+            Create school
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 }
