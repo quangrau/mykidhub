@@ -16,7 +16,7 @@ const signupSchema = z.object({
 
 export type SignupFormData = z.infer<typeof signupSchema>;
 
-export async function signup(formData: SignupFormData) {
+export async function signupAction(formData: SignupFormData) {
   try {
     // 1. Validate the form data
     const validationResult = signupSchema.safeParse(formData);

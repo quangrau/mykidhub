@@ -1,6 +1,6 @@
 "use client";
 
-import { signup } from "@/app/(auth)/sign-up/actions";
+import { signupAction } from "@/app/(auth)/sign-up/actions";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -28,9 +27,7 @@ const formSchema = z.object({
   schoolCapacity: z.number().min(1, "Capacity must be at least 1"),
 });
 
-interface Props extends React.HTMLAttributes<HTMLDivElement> {}
-
-export function SignupForm({ className }: Props) {
+export function SignupForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -51,7 +48,7 @@ export function SignupForm({ className }: Props) {
 
     try {
       // Signup
-      const result = await signup(values);
+      const result = await signupAction(values);
 
       if (!result.success) {
         console.error("Signup failed:", result.error);
@@ -79,7 +76,7 @@ export function SignupForm({ className }: Props) {
   }
 
   return (
-    <div className={cn("grid gap-6", className)}>
+    <div className={"grid gap-6"}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField

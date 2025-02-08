@@ -1,8 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import userService, { UserWithSchool } from "@/services/user";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+
+export type SchoolSession = {
+  id: string;
+  name: string;
+};
+
+export async function getSchoolSession(): Promise<SchoolSession | undefined> {
+  const session = await getServerSession(authOptions);
+  return session?.user?.school;
+}
+
+export async function getUserSession() {
+  const session = await getServerSession(authOptions);
+  return session?.user;
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
