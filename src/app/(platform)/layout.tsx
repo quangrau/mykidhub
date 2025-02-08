@@ -16,20 +16,16 @@ export default function PlatformLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        <Providers>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <>
-                <AppHeader />
-                <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
-              </>
-            </SidebarInset>
-          </SidebarProvider>
-        </Providers>
-      </body>
-    </html>
+    <Providers>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <>
+            <AppHeader />
+            <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+          </>
+        </SidebarInset>
+      </SidebarProvider>
+    </Providers>
   );
 }

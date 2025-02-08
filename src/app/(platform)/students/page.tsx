@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { Button } from "@/components/ui/button";
 import { authOptions } from "@/lib/session";
 import { studentService } from "@/services/student";
-import { ImportIcon, PlusIcon } from "lucide-react";
+import { ImportIcon } from "lucide-react";
+import { AddStudentModal } from "./components/add-student-modal";
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 
@@ -28,10 +29,7 @@ export default async function StudentsPage() {
             Import
             <ImportIcon />
           </Button>
-          <Button>
-            Add Student
-            <PlusIcon />
-          </Button>
+          <AddStudentModal />
         </div>
       </div>
 
