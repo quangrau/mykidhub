@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { User, UserRole } from "@prisma/client";
+import { School, User, UserRole } from "@prisma/client";
 import { compare } from "bcryptjs";
 
 export interface CreateUserData {
@@ -16,15 +16,10 @@ export interface UpdateUserData {
   role?: UserRole;
 }
 
-export type UserWithoutPassword = Omit<User, "password">;
+export type UserWithoutPassword = Pick<User, "id" | "name" | "email" | "image">;
 
 export interface UserWithSchool extends UserWithoutPassword {
-  school?: {
-    id: string;
-    name: string;
-    slug: string;
-    role: string;
-  };
+  school?: Pick<School, "id" | "name">;
 }
 
 class UserServiceError extends Error {
@@ -34,10 +29,13 @@ class UserServiceError extends Error {
   }
 }
 
-const omitPassword = (user: User): UserWithoutPassword => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { password: _, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+const userDTO = (user: User): UserWithoutPassword => {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image,
+  };
 };
 
 export const userService = {
@@ -68,14 +66,16 @@ export const userService = {
         throw new UserServiceError("Invalid credentials");
       }
 
-      // Get the user's school information
-      // console.log({ user });
-
-      const userWithoutPassword = omitPassword(user);
-
+      const userCredentials = userDTO(user);
       return {
-        ...userWithoutPassword,
-      } as UserWithSchool;
+        ...userCredentials,
+        school: user.school
+          ? {
+              id: user.school.id,
+              name: user.school.name,
+            }
+          : undefined,
+      };
     } catch (error) {
       if (error instanceof UserServiceError) throw error;
       console.error("Error validating credentials:", error);

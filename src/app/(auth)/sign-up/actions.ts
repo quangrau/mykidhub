@@ -53,7 +53,7 @@ export async function signup(formData: SignupFormData) {
 
     return { success: true, data };
   } catch (error) {
-    console.log({ error });
+    console.error(error);
     if (error instanceof z.ZodError) {
       return { success: false, error: error.errors };
     }

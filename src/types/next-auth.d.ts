@@ -1,8 +1,8 @@
-import { User } from "@prisma/client";
+import { UserWithSchool } from "@/services/user";
 import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
-    user: DefaultSession["user"] & Partial<User>;
+    user: DefaultSession["user"] & UserWithSchool;
   }
 }
