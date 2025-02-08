@@ -21,12 +21,18 @@ export const classroomService = {
         where: {
           schoolId,
         },
+        include: {
+          _count: {
+            select: {
+              students: true,
+            },
+          },
+        },
         orderBy: {
           createdAt: "desc",
         },
       });
-    } catch (error) {
-      console.error("Error finding classrooms:", error);
+    } catch {
       throw new ClassroomServiceError("Failed to fetch classrooms");
     }
   },
@@ -49,6 +55,7 @@ export const classroomService = {
       const result = await prisma.classroom.create({
         data: {
           name: data.name,
+          capacity: data.capacity,
           school: {
             connect: {
               id: data.schoolId,

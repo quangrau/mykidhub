@@ -68,7 +68,7 @@ export function SigninForm({
         router.refresh();
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       form.setError("root", {
         message: "An error occurred. Please try again.",
       });

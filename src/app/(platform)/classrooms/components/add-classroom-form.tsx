@@ -40,7 +40,6 @@ export function AddClassroomForm({ onCancel }: Props) {
 
   async function onSubmit(values: FormValues) {
     const result = await addClassroomAction(values);
-    console.log("onSubmit", result.error);
 
     if (result?.error) {
       form.setError("name", { type: "custom", message: result.error });

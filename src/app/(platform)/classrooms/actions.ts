@@ -15,12 +15,13 @@ export async function addClassroomAction(values: FormValues) {
   }
 
   try {
-    const result = await classroomService.createClassroom({
+    await classroomService.createClassroom({
       schoolId: school?.id,
       ...values,
     });
-    console.log(result);
+
     revalidatePath("/classrooms");
+
     return {
       error: null,
     };
