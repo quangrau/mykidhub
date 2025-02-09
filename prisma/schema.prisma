@@ -84,17 +84,17 @@ enum InvitationStatus {
 }
 
 model GuardianStudent {
-  id         String           @id @default(cuid())
-  studentId  String
-  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  guardian   Account          @relation(fields: [guardianId], references: [id])
-  guardianId String
-  relation   String?
-  status     InvitationStatus @default(NOT_INVITED)
-  email      String?
-  phone      String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime?        @updatedAt
+  id           String           @id @default(cuid())
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian     Account          @relation(fields: [guardianId], references: [id])
+  guardianId   String
+  relationship String?
+  status       InvitationStatus @default(NOT_INVITED)
+  email        String?
+  phone        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime?        @updatedAt
 
   @@unique([guardianId, studentId])
 }

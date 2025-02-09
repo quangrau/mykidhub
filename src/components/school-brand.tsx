@@ -6,15 +6,12 @@ import {
 import { AudioWaveform } from "lucide-react";
 
 interface Props {
-  school?: {
-    id: string;
-    name: string;
-  };
+  name?: string;
+  logo?: string;
+  plan?: string;
 }
 
-export function SchoolBrand({ school }: Props) {
-  if (!school) return null;
-
+export function SchoolBrand({ name = "--", plan = "Premium" }: Props) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -26,8 +23,8 @@ export function SchoolBrand({ school }: Props) {
             <AudioWaveform className="size-4" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">{school.name}</span>
-            <span className="truncate text-xs">Premium</span>
+            <span className="truncate font-semibold">{name}</span>
+            <span className="truncate text-xs">{plan}</span>
           </div>
         </SidebarMenuButton>
       </SidebarMenuItem>

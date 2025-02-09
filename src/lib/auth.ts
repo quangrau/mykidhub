@@ -77,7 +77,7 @@ export const authOptions: NextAuthOptions = {
           id: token.id,
           role: token.role,
           schoolId: token.schoolId,
-          schooldName: token.schoolName,
+          schoolName: token.schoolName,
         },
       };
     },

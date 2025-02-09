@@ -1,13 +1,33 @@
 import { z } from "zod";
 
-// We're keeping a simple non-relational schema here.
-// IRL, you will have a schema for your data models.
-export const taskSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  status: z.string(),
-  label: z.string(),
-  priority: z.string(),
-});
+export const studentFormSchema = z
+  .object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    classroomId: z.string().min(1, "Classroom is required"),
+    guardian: z.object({
+      id: z.string().optional(),
+      name: z.string().optional(),
+      email: z.string().email("Invalid email").optional(),
+      phone: z.string().optional(),
+      relationship: z.string().optional(),
+    }),
+  })
+  .refine(
+    (data) => {
+      if (!data.guardian?.id) {
+        return (
+          data.guardian?.name &&
+          data.guardian?.email &&
+          data.guardian?.relationship
+        );
+      }
+      return true;
+    },
+    {
+      message: "Guardian information is required when creating a new guardian",
+      path: ["guardian", "name"],
+    }
+  );
 
-export type Task = z.infer<typeof taskSchema>;
+export type StudentFormData = z.infer<typeof studentFormSchema>;

@@ -2,9 +2,9 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -23,36 +23,61 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ClassroomOption } from "@/services/classroom";
+import { faker } from "@faker-js/faker";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
-
-const formSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  classroom: z.string().min(1, "Classroom is required"),
-  guardian: z.string().min(1, "Guardian is required"),
-});
+import { useState } from "react";
+import { addStudentAction } from "../actions";
+import { StudentFormData, studentFormSchema } from "../data/schema";
 
 interface AddStudentFormProps {
   classrooms: Array<ClassroomOption>;
-  onSubmit: (values: z.infer<typeof formSchema>) => void;
   onCancel: () => void;
 }
 
-export function AddStudentForm({
-  onSubmit,
-  onCancel,
-  classrooms,
-}: AddStudentFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
+  const [hasExistingFamily, setHasExistingFamily] = useState(false);
+
+  const form = useForm<StudentFormData>({
+    resolver: zodResolver(studentFormSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      classroom: "",
-      guardian: "",
+      firstName: faker.person.firstName(),
+      lastName: faker.person.lastName(),
+      classroomId: "",
+      guardian: {
+        id: "",
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        phone: faker.phone.number(),
+        relationship: "parent",
+      },
     },
   });
+
+  async function onSubmit(values: StudentFormData) {
+    // Process form data
+    const studentData = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      classroomId: values.classroomId,
+      guardian: {
+        id: values.guardian?.id || undefined,
+        name: values.guardian?.name,
+        email: values.guardian?.email,
+        phone: values.guardian?.phone,
+        relationship: values.guardian?.relationship,
+      },
+    };
+
+    // TODO: Call API to create student
+    const result = await addStudentAction(studentData);
+    if (result?.error) {
+      form.setError("firstName", { type: "custom", message: result.error });
+    } else {
+      form.reset();
+      onCancel();
+    }
+  }
 
   return (
     <Form {...form}>
@@ -92,7 +117,7 @@ export function AddStudentForm({
           </div>
           <FormField
             control={form.control}
-            name="classroom"
+            name="classroomId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Classroom *</FormLabel>
@@ -135,22 +160,144 @@ export function AddStudentForm({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="guardian"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Find a guardian or family *</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter existing guardian name"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="hasExistingFamily"
+              checked={hasExistingFamily}
+              onCheckedChange={(checked) => {
+                const isChecked = checked as boolean;
+                setHasExistingFamily(isChecked);
+
+                // Reset form values when toggling between guardian types
+                form.reset({
+                  ...form.getValues(),
+                  guardian: {
+                    id: isChecked ? "" : undefined,
+                    name: !isChecked ? "" : undefined,
+                    email: !isChecked ? "" : undefined,
+                    phone: !isChecked ? "" : undefined,
+                    relationship: !isChecked ? "" : undefined,
+                  },
+                });
+              }}
+            />
+            <label
+              htmlFor="hasExistingFamily"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              This student&apos;s family already exists
+            </label>
+          </div>
+          {hasExistingFamily ? (
+            <>
+              <FormField
+                control={form.control}
+                name="guardian.email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Find a guardian or family *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter existing guardian name"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          // Reset guardianId when guardian name changes
+                          form.setValue("guardian.id", "123456");
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="guardian.id"
+                render={({ field }) => (
+                  <FormItem className="hidden">
+                    <Input type="hidden" {...field} />
+                  </FormItem>
+                )}
+              />
+            </>
+          ) : (
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="guardian.name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Guardian name *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter guardian name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="guardian.email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Guardian email *</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Enter guardian email"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="guardian.phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Guardian phone (optional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter guardian phone" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="guardian.relationship"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Relationship *</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select relationship" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="parent">Parent</SelectItem>
+                        <SelectItem value="mother">Mother</SelectItem>
+                        <SelectItem value="father">Father</SelectItem>
+                        <SelectItem value="guardian">Nanny</SelectItem>
+                        <SelectItem value="grandmother">Grandmother</SelectItem>
+                        <SelectItem value="grandfather">Grandfather</SelectItem>
+                        <SelectItem value="neighbor">Neighbor</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
         </div>
         <div className="flex justify-end space-x-4 pt-4">
           <Button variant="outline" type="button" onClick={onCancel}>

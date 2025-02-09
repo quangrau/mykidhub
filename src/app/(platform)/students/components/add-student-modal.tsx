@@ -22,11 +22,6 @@ interface Props {
 export function AddStudentModal({ classrooms }: Props) {
   const [open, setOpen] = useState(false);
 
-  function onSubmit(values: unknown) {
-    console.log(values);
-    setOpen(false);
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -45,7 +40,6 @@ export function AddStudentModal({ classrooms }: Props) {
         </DialogHeader>
         <AddStudentForm
           classrooms={classrooms}
-          onSubmit={onSubmit}
           onCancel={() => setOpen(false)}
         />
       </DialogContent>

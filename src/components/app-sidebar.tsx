@@ -150,18 +150,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       }
     : undefined;
 
-  const school = session?.user?.school
-    ? {
-        id: session.user.school.id,
-        name: session.user.school.name,
-        // logo: session.user.school.logo,
-      }
-    : undefined;
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SchoolBrand school={school} />
+        <SchoolBrand name={session?.user?.schoolName} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

@@ -14,11 +14,11 @@ export default async function StudentsPage() {
   const students = await studentService.getStudentsBySchoolId(schoolId!);
   const classrooms = await classroomService.getClassroomOptions(schoolId!);
 
-  console.log({ students, classrooms });
+  console.log({ students });
 
   return (
     <>
-      <div className="flex items-center justify-between pb-8">
+      <div className="flex flex-wrap items-center justify-between pb-8 gap-x-4 space-y-2">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Students</h2>
           <p className="text-muted-foreground">
@@ -34,7 +34,7 @@ export default async function StudentsPage() {
         </div>
       </div>
 
-      <DataTable data={[]} columns={columns} />
+      <DataTable data={students} columns={columns} />
     </>
   );
 }
