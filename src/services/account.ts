@@ -1,22 +1,23 @@
-import { prisma } from "@/lib/prisma";
-import { School, User, UserRole } from "@prisma/client";
+import { db } from "@/lib/db";
+import { Account, School } from "@prisma/client";
 import { compare } from "bcryptjs";
 
 export interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  role?: UserRole;
 }
 
 export interface UpdateUserData {
   name?: string;
   email?: string;
   password?: string;
-  role?: UserRole;
 }
 
-export type UserWithoutPassword = Pick<User, "id" | "name" | "email" | "image">;
+export type UserWithoutPassword = Pick<
+  Account,
+  "id" | "name" | "email" | "image" | "role"
+>;
 
 export interface UserWithSchool extends UserWithoutPassword {
   school?: Pick<School, "id" | "name">;
@@ -29,12 +30,13 @@ class UserServiceError extends Error {
   }
 }
 
-const userDTO = (user: User): UserWithoutPassword => {
+const userDTO = (user: Account): UserWithoutPassword => {
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     image: user.image,
+    role: user.role,
   };
 };
 
@@ -44,14 +46,13 @@ export const userService = {
     password: string
   ): Promise<UserWithSchool> {
     try {
-      const user = await prisma.user.findUnique({
+      const user = await db.account.findUnique({
         where: { email },
         include: {
           school: {
             select: {
               id: true,
               name: true,
-              slug: true,
             },
           },
         },

@@ -1,7 +1,6 @@
-import { getServerSession } from "next-auth";
-
 import { Button } from "@/components/ui/button";
-import { authOptions } from "@/lib/session";
+import { getUserSession } from "@/lib/auth";
+import { classroomService } from "@/services/classroom";
 import { studentService } from "@/services/student";
 import { ImportIcon } from "lucide-react";
 import { AddStudentModal } from "./components/add-student-modal";
@@ -9,11 +8,13 @@ import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 
 export default async function StudentsPage() {
-  const session = await getServerSession(authOptions);
-  const schoolId = session?.user?.school?.id;
-  const students = await studentService.findStudentsBySchoolId(schoolId!);
+  const user = await getUserSession();
+  const schoolId = user?.schoolId;
 
-  console.log({ students });
+  const students = await studentService.getStudentsBySchoolId(schoolId!);
+  const classrooms = await classroomService.getClassroomOptions(schoolId!);
+
+  console.log({ students, classrooms });
 
   return (
     <>
@@ -29,7 +30,7 @@ export default async function StudentsPage() {
             Import
             <ImportIcon />
           </Button>
-          <AddStudentModal />
+          <AddStudentModal classrooms={classrooms} />
         </div>
       </div>
 

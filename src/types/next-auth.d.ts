@@ -1,8 +1,11 @@
-import { UserWithSchool } from "@/services/user";
 import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
   interface Session {
-    user: DefaultSession["user"] & UserWithSchool;
+    user: DefaultSession["user"] & {
+      id: string;
+      schoolId?: string;
+      schoolName?: string;
+    };
   }
 }

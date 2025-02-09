@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { Classroom } from "@prisma/client";
 
 class ClassroomServiceError extends Error {
@@ -14,12 +14,50 @@ export interface ClassroomCreateData {
   capacity: number;
 }
 
+export interface ClassroomFilterOptions {
+  status?: number;
+  orderBy?: keyof Classroom;
+  order?: "asc" | "desc";
+}
+
+export interface ClassroomOption {
+  id: string;
+  name: string;
+}
+
 export const classroomService = {
-  findClassroomsBySchoolId: async (schoolId: string): Promise<Classroom[]> => {
+  getClassroomOptions: async (schoolId: string): Promise<ClassroomOption[]> => {
     try {
-      return prisma.classroom.findMany({
+      return db.classroom.findMany({
         where: {
           schoolId,
+          status: 1,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new ClassroomServiceError("Failed to fetch classroom options");
+    }
+  },
+
+  getClassroomsBySchoolId: async (
+    schoolId: string,
+    options: ClassroomFilterOptions = {}
+  ): Promise<Classroom[]> => {
+    try {
+      const { status = 1, orderBy = "createdAt", order = "desc" } = options;
+
+      return db.classroom.findMany({
+        where: {
+          schoolId,
+          status,
         },
         include: {
           _count: {
@@ -29,17 +67,18 @@ export const classroomService = {
           },
         },
         orderBy: {
-          createdAt: "desc",
+          [orderBy]: order,
         },
       });
-    } catch {
+    } catch (error) {
+      console.error(error);
       throw new ClassroomServiceError("Failed to fetch classrooms");
     }
   },
 
   createClassroom: async (data: ClassroomCreateData): Promise<Classroom> => {
     try {
-      const existingClassroom = await prisma.classroom.findFirst({
+      const existingClassroom = await db.classroom.findFirst({
         where: {
           name: data.name,
           schoolId: data.schoolId,
@@ -52,7 +91,7 @@ export const classroomService = {
         );
       }
 
-      const result = await prisma.classroom.create({
+      const result = await db.classroom.create({
         data: {
           name: data.name,
           capacity: data.capacity,

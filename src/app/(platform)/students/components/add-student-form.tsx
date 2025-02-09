@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Classroom } from "@prisma/client";
+import { ClassroomOption } from "@/services/classroom";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -34,7 +34,7 @@ const formSchema = z.object({
 });
 
 interface AddStudentFormProps {
-  classrooms: Array<Classroom>;
+  classrooms: Array<ClassroomOption>;
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   onCancel: () => void;
 }
@@ -56,7 +56,11 @@ export function AddStudentForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        autoComplete="off"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
         <div className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
             <FormField
@@ -102,11 +106,11 @@ export function AddStudentForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <div className="border-b pb-2">
+                    <div className="border-b pb-1 mb-2">
                       <Link
                         href="/classrooms"
                         className={cn(
-                          buttonVariants({ variant: "ghost" }),
+                          buttonVariants({ variant: "secondary" }),
                           "w-full flex justify-between"
                         )}
                       >

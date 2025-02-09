@@ -11,22 +11,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { classroomService } from "@/services/classroom";
-import { useQuery } from "@tanstack/react-query";
+import { ClassroomOption } from "@/services/classroom";
 import { PlusIcon } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { AddStudentForm } from "./add-student-form";
 
-export function AddStudentModal() {
-  const [open, setOpen] = useState(false);
-  const { data: session } = useSession();
-  const schoolId = session?.user?.school?.id as string;
+interface Props {
+  classrooms: ClassroomOption[];
+}
 
-  const { data: classrooms = [] } = useQuery({
-    queryKey: ["classrooms", schoolId],
-    queryFn: () => classroomService.findClassroomsBySchoolId(schoolId),
-    enabled: Boolean(open && schoolId),
-  });
+export function AddStudentModal({ classrooms }: Props) {
+  const [open, setOpen] = useState(false);
 
   function onSubmit(values: unknown) {
     console.log(values);

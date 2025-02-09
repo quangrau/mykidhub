@@ -1,14 +1,15 @@
 "use server";
 
-import { getSchoolSession } from "@/lib/session";
+import { getUserSession } from "@/lib/auth";
 import { classroomService } from "@/services/classroom";
 import { revalidatePath } from "next/cache";
 import { FormValues } from "./components/add-classroom-form";
 
 export async function addClassroomAction(values: FormValues) {
-  const school = await getSchoolSession();
+  const user = await getUserSession();
+  const schoolId = user?.schoolId;
 
-  if (!school) {
+  if (!schoolId) {
     return {
       error: "No school found.",
     };
@@ -16,7 +17,7 @@ export async function addClassroomAction(values: FormValues) {
 
   try {
     await classroomService.createClassroom({
-      schoolId: school?.id,
+      schoolId,
       ...values,
     });
 

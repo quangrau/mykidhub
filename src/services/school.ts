@@ -1,17 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import { Prisma, School, SchoolType, User } from "@prisma/client";
-
-export type SchoolWithUser = School & {
-  user: User;
-};
-
-export interface UpdateSchoolData {
-  name?: string;
-  slug?: string;
-  phone?: string;
-  type?: SchoolType;
-  capacity?: number;
-}
+import { db } from "@/lib/db";
+import { Prisma, School } from "@prisma/client";
 
 class SchoolServiceError extends Error {
   constructor(message: string) {
@@ -23,15 +11,15 @@ class SchoolServiceError extends Error {
 export const schoolService = {
   async createSchool(data: Prisma.SchoolCreateInput): Promise<School> {
     try {
-      const existingSchool = await prisma.school.findFirst({
-        where: { slug: data.slug },
+      const existingSchool = await db.school.findFirst({
+        where: { name: data.name },
       });
 
       if (existingSchool) {
-        throw new SchoolServiceError("School with this slug already exists");
+        throw new SchoolServiceError("School with this name already exists");
       }
 
-      const result = await prisma.school.create({ data });
+      const result = await db.school.create({ data });
 
       return result;
     } catch (error) {
@@ -43,7 +31,7 @@ export const schoolService = {
 
   async findSchoolById(schoolId: string): Promise<School | null> {
     try {
-      const school = await prisma.school.findUnique({
+      const school = await db.school.findUnique({
         where: { id: schoolId },
       });
 

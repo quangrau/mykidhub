@@ -1,13 +1,13 @@
-import { getSchoolSession } from "@/lib/session";
+import { getUserSession } from "@/lib/auth";
 import { classroomService } from "@/services/classroom";
 import { AddClassroomModal } from "./components/add-classroom-modal";
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 
 export default async function ClassroomsPage() {
-  const school = await getSchoolSession();
-  const schoolId = school?.id;
-  const classrooms = await classroomService.findClassroomsBySchoolId(schoolId!);
+  const user = await getUserSession();
+  const schoolId = user?.schoolId;
+  const classrooms = await classroomService.getClassroomsBySchoolId(schoolId!);
 
   return (
     <>

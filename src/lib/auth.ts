@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
-import userService, { UserWithSchool } from "@/services/user";
+import { db } from "@/lib/db";
+import accountService, { UserWithSchool } from "@/services/account";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -9,18 +9,13 @@ export type SchoolSession = {
   name: string;
 };
 
-export async function getSchoolSession(): Promise<SchoolSession | undefined> {
-  const session = await getServerSession(authOptions);
-  return session?.user?.school;
-}
-
 export async function getUserSession() {
   const session = await getServerSession(authOptions);
   return session?.user;
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(db),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -34,10 +29,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await userService.validateUserCredentials(
+          const user = await accountService.validateUserCredentials(
             credentials.email,
             credentials.password
           );
+
+          if (!user) {
+            return null;
+          }
 
           return user;
         } catch (error) {
@@ -57,13 +56,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       const userWithSchool = user as UserWithSchool;
-      if (user) {
+
+      if (userWithSchool) {
         return {
           ...token,
           id: userWithSchool.id,
-          school: userWithSchool.school,
+          role: userWithSchool.role,
+          schoolId: userWithSchool?.school?.id,
+          schoolName: userWithSchool?.school?.name,
         };
       }
+
       return token;
     },
     async session({ session, token }) {
@@ -72,7 +75,9 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
-          school: token.school,
+          role: token.role,
+          schoolId: token.schoolId,
+          schooldName: token.schoolName,
         },
       };
     },

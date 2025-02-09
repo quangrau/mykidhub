@@ -11,61 +11,42 @@ datasource db {
   relationMode = "prisma"
 }
 
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
+enum AccountRole {
+  ADMIN
+  SCHOOL_ADMIN
+  TEACHER
+  GUARDIAN
 }
 
-model User {
+model Account {
   id            String            @id @default(cuid())
   name          String?
   email         String?           @unique
   emailVerified DateTime?
   password      String?
   image         String?
-  accounts      Account[]
+  phone         String?
+  role          AccountRole?
   guardians     GuardianStudent[]
   school        School?           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   schoolId      String?
-  schoolRole    SchoolRole        @default(TEACHER)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
-}
-
-enum SchoolType {
-  HOME
-  CENTER
-  MULTI_SITE
 }
 
 model School {
   id         String      @id @default(cuid())
   name       String
   slug       String      @unique
-  address    String?
+  adminEmail String
   phone      String?
-  type       SchoolType  @default(HOME)
+  address    String?
+  metadata   Json?       @default("{}") @db.JsonB
   capacity   Int?        @default(0)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime?   @updatedAt
-  users      User[]
+  accounts   Account[]
   classrooms Classroom[]
   students   Student[]
 }
@@ -96,26 +77,24 @@ model Student {
   updatedAt   DateTime?         @updatedAt
 }
 
+enum InvitationStatus {
+  NOT_INVITED
+  INVITED
+  SIGNED_UP
+}
+
 model GuardianStudent {
-  id        String    @id @default(cuid())
-  userId    String
-  studentId String
-  relation  String?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  id         String           @id @default(cuid())
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  guardian   Account          @relation(fields: [guardianId], references: [id])
+  guardianId String
+  relation   String?
+  status     InvitationStatus @default(NOT_INVITED)
+  email      String?
+  phone      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime?        @updatedAt
 
-  @@unique([userId, studentId])
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum SchoolRole {
-  ADMINISTRATOR
-  TEACHER
-  STAFF
+  @@unique([guardianId, studentId])
 }
