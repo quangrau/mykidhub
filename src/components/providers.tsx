@@ -2,7 +2,6 @@
 
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { SessionProvider } from "next-auth/react";
-import { QueryProvider } from "./query-provider";
 
 interface Props {
   children?: React.ReactNode;
@@ -11,9 +10,7 @@ interface Props {
 export function Providers({ children }: Props) {
   return (
     <SessionProvider>
-      <QueryProvider>
-        <SidebarProvider>{children}</SidebarProvider>
-      </QueryProvider>
+      <SidebarProvider>{children}</SidebarProvider>
     </SessionProvider>
   );
 }

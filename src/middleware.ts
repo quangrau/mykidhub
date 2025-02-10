@@ -1,33 +1,48 @@
-import { getToken } from "next-auth/jwt";
+import NextAuth, { Session } from "next-auth";
+
+import authConfig from "@/auth.config";
+import {
+  apiAuthPrefix,
+  authRoutes,
+  DEFAULT_LOGIN_REDIRECT,
+  publicRoutes,
+} from "@/routes";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const token = await getToken({ req });
-  const isAuth = !!token;
+const { auth } = NextAuth(authConfig);
+export default auth(
+  (req: NextRequest & { auth: Session | null }): Response | void => {
+    const { nextUrl } = req;
+    const isLoggedIn = !!req.auth;
 
-  // Check if the current route is a public route
-  const { pathname } = req.nextUrl;
-  const publicRoutes = ["/sign-in", "/sign-up"];
-  const isPublicRoute = publicRoutes.includes(pathname);
+    const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+    const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  // Redirect authenticated users away from auth pages
-  if (isAuth && isPublicRoute) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (isApiAuthRoute) {
+      return NextResponse.next();
+    }
+
+    if (isAuthRoute) {
+      if (isLoggedIn) {
+        return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      }
+      return NextResponse.next();
+    }
+
+    if (!isLoggedIn && !isPublicRoute) {
+      return Response.redirect(new URL("/sign-in", nextUrl));
+    }
+
+    return NextResponse.next();
   }
+);
 
-  // Protect all routes except public routes
-  if (!isPublicRoute && !isAuth) {
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(signInUrl);
-  }
-
-  return NextResponse.next();
-}
-
-// Routes middleware should NOT run on
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    // Always run for API routes
+    "/(api|trpc)(.*)",
   ],
 };

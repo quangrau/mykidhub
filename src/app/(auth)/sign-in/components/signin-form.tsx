@@ -1,5 +1,6 @@
 "use client";
 
+import FormErrors from "@/components/form-errors";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,64 +19,51 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { SignInSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AlertDestructive } from "./ui/alert-destructive";
+import { signInAction } from "../actions";
 
-const formSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type FormData = z.infer<typeof formSchema>;
+type SignInData = z.infer<typeof SignInSchema>;
 
 export function SigninForm({
   className,
 }: React.ComponentPropsWithoutRef<"div">) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SignInData>({
+    resolver: zodResolver(SignInSchema),
     defaultValues: {
       email: "admin@mykidhub.com",
       password: "1234567890",
     },
   });
 
-  async function onSubmit(values: FormData) {
-    setIsLoading(true);
+  async function onSubmit(values: SignInData) {
+    startTransition(async () => {
+      try {
+        const result = await signInAction(values);
+        if (!result.success) {
+          form.setError("root", {
+            type: "server",
+            message: result.message,
+          });
+        }
 
-    try {
-      // 1. Verify email and password
-      const response = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-      });
-
-      if (response?.error) {
+        router.push(DEFAULT_LOGIN_REDIRECT);
+      } catch {
         form.setError("root", {
-          message: "Invalid email or password",
+          type: "custom",
+          message: "An error occurred. Please try again.",
         });
-      } else {
-        // 3. Redirect to dashboard
-        router.push("/");
-        router.refresh();
       }
-    } catch (error) {
-      console.error(error);
-      form.setError("root", {
-        message: "An error occurred. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    });
   }
 
   return (
@@ -100,7 +88,9 @@ export function SigninForm({
                           <FormControl>
                             <Input
                               type="email"
+                              autoComplete="email"
                               placeholder="m@example.com"
+                              disabled={isPending}
                               {...field}
                             />
                           </FormControl>
@@ -120,7 +110,9 @@ export function SigninForm({
                           <FormControl>
                             <Input
                               type="password"
+                              autoComplete="current-password"
                               placeholder="Enter your password"
+                              disabled={isPending}
                               {...field}
                             />
                           </FormControl>
@@ -129,14 +121,14 @@ export function SigninForm({
                       )}
                     />
                   </div>
-                  {form.formState.errors.root && (
-                    <AlertDestructive
-                      title="Error"
-                      description={form.formState.errors.root.message}
-                    />
-                  )}
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign In"}
+                  <FormErrors message={form.formState.errors?.root?.message} />
+                  <Button
+                    className="w-full"
+                    type="submit"
+                    disabled={isPending}
+                    aria-disabled={isPending}
+                  >
+                    {isPending ? "Signing in..." : "Sign In"}
                   </Button>
                 </div>
                 <div className="text-center text-sm">

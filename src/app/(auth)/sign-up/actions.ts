@@ -1,8 +1,7 @@
 "use server";
 
-import { generateSlug, hashPassword } from "@/lib/utils";
-import schoolService from "@/services/school";
-import { AccountRole } from "@prisma/client";
+import { db } from "@/lib/db";
+import { hashPassword } from "@/lib/utils";
 import { z } from "zod";
 
 const signupSchema = z.object({
@@ -28,32 +27,42 @@ export async function signupAction(formData: SignupFormData) {
 
     // 2. Create school and user
     const validatedData = validationResult.data;
-    const slug = generateSlug(validatedData.schoolName);
+    // const slug = generateSlug(validatedData.schoolName);
     const hashedPassword = await hashPassword(validatedData.userPassword);
 
-    const data = await schoolService.createSchool({
-      slug,
-      name: validatedData.schoolName,
-      phone: validatedData.schoolPhone,
-      adminEmail: validatedData.userEmail,
-      accounts: {
-        create: {
-          name: validatedData.userName,
-          email: validatedData.userEmail,
-          phone: validatedData.schoolPhone,
-          password: hashedPassword,
-          role: AccountRole.SCHOOL_ADMIN,
-        },
+    const data = await db.user.create({
+      data: {
+        name: validatedData.userName,
+        email: validatedData.userEmail,
+        password: hashedPassword,
       },
     });
 
-    return { success: true, data };
+    console.log(data);
+
+    // const data = await schoolService.createSchool({
+    //   slug,
+    //   name: validatedData.schoolName,
+    //   phone: validatedData.schoolPhone,
+    //   adminEmail: validatedData.userEmail,
+    //   accounts: {
+    //     create: {
+    //       name: validatedData.userName,
+    //       email: validatedData.userEmail,
+    //       phone: validatedData.schoolPhone,
+    //       password: hashedPassword,
+    //       role: AccountRole.SCHOOL_ADMIN,
+    //     },
+    //   },
+    // });
+
+    return { success: true, message: "Ok" };
   } catch (error) {
     console.error(error);
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors };
+      return { success: false, message: error.errors };
     }
 
-    return { success: false, error: "Something went wrong" };
+    return { success: false, message: "Something went wrong" };
   }
 }

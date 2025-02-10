@@ -1,6 +1,7 @@
 "use client";
 
 import { signupAction } from "@/app/(auth)/sign-up/actions";
+import { AlertDestructive } from "@/components/ui/alert-destructive";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,9 +13,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -28,8 +26,7 @@ const formSchema = z.object({
 });
 
 export function SignupForm() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  // const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,8 +41,6 @@ export function SignupForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-
     try {
       // Signup
       const result = await signupAction(values);
@@ -55,28 +50,45 @@ export function SignupForm() {
         return;
       }
 
+      console.log(result);
+
       // SignIn after signup successfully
-      const authResult = await signIn("credentials", {
-        email: values.userEmail,
-        password: values.userPassword,
-        redirect: false,
-      });
+      // const authResult = await signIn("credentials", {
+      //   email: values.userEmail,
+      //   password: values.userPassword,
+      //   redirect: false,
+      // });
 
-      if (!authResult?.ok) {
-        console.error("SignIn failed:", authResult?.error);
-        return;
-      }
+      // if (!authResult?.ok) {
+      //   form.setError("root", {
+      //     type: "custom",
+      //     message: authResult?.error ?? "Something went wrong",
+      //   });
+      //   return;
+      // }
 
-      router.push("/dashboard");
+      // router.push("/dashboard");
     } catch (error) {
       console.error(error);
-    } finally {
-      setIsLoading(false);
     }
+  }
+
+  function renderErrors() {
+    if (!form.formState.errors.root) {
+      return null;
+    }
+
+    return (
+      <AlertDestructive
+        title="Error"
+        description={form.formState.errors.root.message}
+      />
+    );
   }
 
   return (
     <div className={"grid gap-6"}>
+      {renderErrors()}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -157,7 +169,12 @@ export function SignupForm() {
             )}
           />
 
-          <Button className="w-full" type="submit" disabled={isLoading}>
+          <Button
+            className="w-full"
+            type="submit"
+            aria-disabled={form.formState.isSubmitting}
+            disabled={form.formState.isSubmitting}
+          >
             Create school
           </Button>
         </form>
