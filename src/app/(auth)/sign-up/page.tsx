@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 
-import { SignupForm } from "@/components/signup-form";
+import { SignupForm } from "@/app/(auth)/sign-up/components/signup-form";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

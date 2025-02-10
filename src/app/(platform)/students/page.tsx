@@ -14,8 +14,6 @@ export default async function StudentsPage() {
   const students = await studentService.getStudentsBySchoolId(schoolId!);
   const classrooms = await classroomService.getClassroomOptions(schoolId!);
 
-  console.log({ students });
-
   return (
     <>
       <div className="flex flex-wrap items-center justify-between pb-8 gap-x-4 space-y-2">

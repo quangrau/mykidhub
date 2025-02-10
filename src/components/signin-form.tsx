@@ -1,6 +1,5 @@
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,13 +19,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { AlertDestructive } from "./ui/alert-destructive";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -131,13 +130,10 @@ export function SigninForm({
                     />
                   </div>
                   {form.formState.errors.root && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>
-                        {form.formState.errors.root.message}
-                      </AlertDescription>
-                    </Alert>
+                    <AlertDestructive
+                      title="Error"
+                      description={form.formState.errors.root.message}
+                    />
                   )}
                   <Button className="w-full" type="submit" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}

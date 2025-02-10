@@ -26,41 +26,60 @@ model Account {
   password      String?
   image         String?
   phone         String?
-  role          AccountRole?
-  guardians     GuardianStudent[]
-  school        School?           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolId      String?
+  guardians     GuardianProfile[]
+  staff         StaffProfile?     @relation("AccountToStaffProfile")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 }
 
 model School {
-  id         String      @id @default(cuid())
+  id         String         @id @default(cuid())
   name       String
-  slug       String      @unique
+  slug       String         @unique
   adminEmail String
   phone      String?
   address    String?
-  metadata   Json?       @default("{}") @db.JsonB
-  capacity   Int?        @default(0)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime?   @updatedAt
-  accounts   Account[]
+  metadata   Json?          @default("{}") @db.JsonB
+  capacity   Int?           @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime?      @updatedAt
   classrooms Classroom[]
   students   Student[]
+  staffs     StaffProfile[]
+}
+
+model StaffProfile {
+  id         String      @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  role       AccountRole @default(TEACHER)
+  status     Int         @default(1)
+  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  schoolId   String
+  account    Account?    @relation("AccountToStaffProfile", fields: [accountId], references: [id])
+  accountId  String?     @unique
+  classrooms Classroom[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime?   @updatedAt
+
+  @@unique([email, schoolId])
+  @@index([email])
+  @@index([status])
 }
 
 model Classroom {
-  id        String    @id @default(cuid())
+  id        String         @id @default(cuid())
   name      String
   schoolId  String
   capacity  Int?
-  status    Int       @default(1)
-  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  status    Int            @default(1)
+  school    School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   students  Student[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  staffs    StaffProfile[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime?      @updatedAt
 }
 
 model Student {
@@ -72,7 +91,7 @@ model Student {
   classroomId String
   school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   classroom   Classroom         @relation(fields: [classroomId], references: [id])
-  guardians   GuardianStudent[]
+  guardians   GuardianProfile[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime?         @updatedAt
 }
@@ -83,7 +102,7 @@ enum InvitationStatus {
   SIGNED_UP
 }
 
-model GuardianStudent {
+model GuardianProfile {
   id           String           @id @default(cuid())
   studentId    String
   student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
@@ -97,4 +116,6 @@ model GuardianStudent {
   updatedAt    DateTime?        @updatedAt
 
   @@unique([guardianId, studentId])
+  @@index([email])
+  @@index([status])
 }
