@@ -19,6 +19,13 @@ export async function getUserById(id: string) {
       where: {
         id,
       },
+      include: {
+        staff: {
+          include: {
+            school: true,
+          },
+        },
+      },
     });
     return user;
   } catch {

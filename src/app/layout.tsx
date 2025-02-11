@@ -1,4 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export default function Layout({
@@ -10,7 +10,7 @@ export default function Layout({
     <html lang="en">
       <body className="antialiased">
         {children}
-        <Toaster />
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

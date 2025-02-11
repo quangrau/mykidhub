@@ -16,16 +16,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { SignUpSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { signupAction } from "../actions";
 
 type SignUpData = z.infer<typeof SignUpSchema>;
 
 export function SignupForm() {
-  const { toast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -42,11 +40,6 @@ export function SignupForm() {
   });
 
   async function onSubmit(values: SignUpData) {
-    toast({
-      title: "Signing up...",
-      description: "Please wait while we sign you up.",
-    });
-
     startTransition(() => {
       signupAction(values)
         .then((result) => {
@@ -56,7 +49,15 @@ export function SignupForm() {
               message: result.message,
             });
           } else {
-            router.push(DEFAULT_LOGIN_REDIRECT);
+            form.reset();
+
+            toast.success("Your school has been created!", {
+              description: "Please check your email for a verification link.",
+              action: {
+                label: "Sign In",
+                onClick: () => router.push("/sign-in"),
+              },
+            });
           }
         })
         .catch((error) => {
