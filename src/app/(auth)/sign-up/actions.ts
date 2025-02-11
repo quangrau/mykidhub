@@ -1,68 +1,84 @@
 "use server";
 
+import { getUserByEmail } from "@/data/user";
 import { db } from "@/lib/db";
-import { hashPassword } from "@/lib/utils";
+import { generateSlug, hashPassword } from "@/lib/utils";
+import { SignUpSchema } from "@/schemas";
+import { StaffRole } from "@prisma/client";
 import { z } from "zod";
 
-const signupSchema = z.object({
-  userName: z.string().min(2, "Name must be at least 2 characters"),
-  userEmail: z.string().email("Invalid email address"),
-  userPassword: z.string().min(6, "Password must be at least 6 characters"),
-  schoolName: z.string().min(2, "School name must be at least 2 characters"),
-  schoolPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-});
+export async function signupAction(formData: z.infer<typeof SignUpSchema>) {
+  // 1. Validate the form data
+  const validatedData = SignUpSchema.safeParse(formData);
+  if (!validatedData.success) {
+    return {
+      success: false,
+      message: "Invalid form data.",
+    };
+  }
 
-export type SignupFormData = z.infer<typeof signupSchema>;
+  // 2. Create school and user
+  const { userName, userEmail, userPassword, schoolName } = validatedData.data;
+  // const slug = generateSlug(validatedData.schoolName);
+  const hashedPassword = await hashPassword(userPassword);
 
-export async function signupAction(formData: SignupFormData) {
   try {
-    // 1. Validate the form data
-    const validationResult = signupSchema.safeParse(formData);
-    if (!validationResult.success) {
+    // Check if user is exist by email
+    const existingUser = await getUserByEmail(userEmail);
+    if (existingUser) {
       return {
         success: false,
-        error: validationResult.error.errors,
+        message: "Email already exists.",
       };
     }
 
-    // 2. Create school and user
-    const validatedData = validationResult.data;
-    // const slug = generateSlug(validatedData.schoolName);
-    const hashedPassword = await hashPassword(validatedData.userPassword);
+    // Check if school is exist by name or email
+    const schoolSlug = generateSlug(schoolName);
+    const existingSchool = await db.school.findFirst({
+      where: { slug: schoolSlug },
+    });
+    if (existingSchool) {
+      return {
+        success: false,
+        message: "School with this name already exists.",
+      };
+    }
 
-    const data = await db.user.create({
+    // Create school
+    const school = await db.school.create({
       data: {
-        name: validatedData.userName,
-        email: validatedData.userEmail,
-        password: hashedPassword,
+        name: schoolName,
+        slug: schoolSlug,
+        adminEmail: userEmail,
       },
     });
 
-    console.log(data);
+    // Create user
+    const nameParts = userName.split(" ");
+    await db.user.create({
+      data: {
+        name: userName,
+        email: userEmail,
+        password: hashedPassword,
+        staff: {
+          create: {
+            firstName: nameParts[0],
+            lastName: nameParts[nameParts.length - 1],
+            email: userEmail,
+            role: StaffRole.SCHOOL_ADMIN,
+            school: {
+              connect: {
+                id: school.id,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    // const data = await schoolService.createSchool({
-    //   slug,
-    //   name: validatedData.schoolName,
-    //   phone: validatedData.schoolPhone,
-    //   adminEmail: validatedData.userEmail,
-    //   accounts: {
-    //     create: {
-    //       name: validatedData.userName,
-    //       email: validatedData.userEmail,
-    //       phone: validatedData.schoolPhone,
-    //       password: hashedPassword,
-    //       role: AccountRole.SCHOOL_ADMIN,
-    //     },
-    //   },
-    // });
-
-    return { success: true, message: "Ok" };
+    return { success: true, message: "Your school has been created." };
   } catch (error) {
-    console.error(error);
-    if (error instanceof z.ZodError) {
-      return { success: false, message: error.errors };
-    }
-
-    return { success: false, message: "Something went wrong" };
+    return { success: false, message: "Something went wrong." };
+    throw error;
   }
 }

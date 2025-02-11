@@ -1,7 +1,11 @@
 "use client";
 
-import { signupAction } from "@/app/(auth)/sign-up/actions";
-import { AlertDestructive } from "@/components/ui/alert-destructive";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+import FormError from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,24 +16,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
+import { SignUpSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { signupAction } from "../actions";
 
-const formSchema = z.object({
-  userName: z.string().min(2, "Name must be at least 2 characters"),
-  userEmail: z.string().email("Invalid email address"),
-  userPassword: z.string().min(6, "Password must be at least 6 characters"),
-  schoolName: z.string().min(2, "School name must be at least 2 characters"),
-  schoolPhone: z.string().min(10, "Phone number must be at least 10 digits"),
-  schoolCapacity: z.number().min(1, "Capacity must be at least 1"),
-});
+type SignUpData = z.infer<typeof SignUpSchema>;
 
 export function SignupForm() {
-  // const router = useRouter();
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SignUpData>({
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
       userName: "Alex Le",
       userEmail: "admin@mykidhub.com",
@@ -40,57 +41,41 @@ export function SignupForm() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      // Signup
-      const result = await signupAction(values);
+  async function onSubmit(values: SignUpData) {
+    toast({
+      title: "Signing up...",
+      description: "Please wait while we sign you up.",
+    });
 
-      if (!result.success) {
-        console.error("Signup failed:", result.error);
-        return;
-      }
-
-      console.log(result);
-
-      // SignIn after signup successfully
-      // const authResult = await signIn("credentials", {
-      //   email: values.userEmail,
-      //   password: values.userPassword,
-      //   redirect: false,
-      // });
-
-      // if (!authResult?.ok) {
-      //   form.setError("root", {
-      //     type: "custom",
-      //     message: authResult?.error ?? "Something went wrong",
-      //   });
-      //   return;
-      // }
-
-      // router.push("/dashboard");
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  function renderErrors() {
-    if (!form.formState.errors.root) {
-      return null;
-    }
-
-    return (
-      <AlertDestructive
-        title="Error"
-        description={form.formState.errors.root.message}
-      />
-    );
+    startTransition(() => {
+      signupAction(values)
+        .then((result) => {
+          if (!result.success) {
+            form.setError("root", {
+              type: "server",
+              message: result.message,
+            });
+          } else {
+            router.push(DEFAULT_LOGIN_REDIRECT);
+          }
+        })
+        .catch((error) => {
+          form.setError("root", {
+            type: "custom",
+            message: error?.message,
+          });
+        });
+    });
   }
 
   return (
     <div className={"grid gap-6"}>
-      {renderErrors()}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          autoComplete="off"
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="userName"
@@ -169,11 +154,13 @@ export function SignupForm() {
             )}
           />
 
+          <FormError message={form.formState.errors.root?.message} />
+
           <Button
             className="w-full"
             type="submit"
-            aria-disabled={form.formState.isSubmitting}
-            disabled={form.formState.isSubmitting}
+            aria-disabled={isPending}
+            disabled={isPending}
           >
             Create school
           </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import FormErrors from "@/components/form-errors";
+import FormError from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -121,7 +121,7 @@ export function SigninForm({
                       )}
                     />
                   </div>
-                  <FormErrors message={form.formState.errors?.root?.message} />
+                  <FormError message={form.formState.errors?.root?.message} />
                   <Button
                     className="w-full"
                     type="submit"

@@ -1,5 +1,5 @@
-import { SigninForm } from "@/app/(auth)/sign-in/components/signin-form";
 import { GalleryVerticalEnd } from "lucide-react";
+import { SigninForm } from "./_components/signin-form";
 
 export default function SigninPage() {
   return (

@@ -13,7 +13,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useSession } from "next-auth/react";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 // This is sample data.
 const data = {
@@ -141,26 +141,23 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession();
-  const user = session?.user
-    ? {
-        name: session.user.name || "",
-        email: session.user.email || "",
-        avatar: session.user.image || data.user.avatar,
-      }
-    : undefined;
+  const user = useCurrentUser();
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SchoolBrand name={session?.user?.schoolName} />
+        <SchoolBrand name={user?.schoolName} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
         {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser
+          userName={user?.name}
+          userEmail={user?.email}
+          userImage={user?.image}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
