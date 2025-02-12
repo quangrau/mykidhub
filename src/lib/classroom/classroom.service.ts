@@ -1,5 +1,11 @@
 import { db } from "@/lib/database/prisma.service";
 import { Classroom } from "@prisma/client";
+import type {
+  ClassroomCreateData,
+  ClassroomFilterOptions,
+  ClassroomOption,
+  ClassroomWithStudentCount,
+} from "./classroom.types";
 
 class ClassroomServiceError extends Error {
   constructor(message: string) {
@@ -8,27 +14,10 @@ class ClassroomServiceError extends Error {
   }
 }
 
-export interface ClassroomCreateData {
-  name: string;
-  schoolId: string;
-  capacity: number;
-}
-
-export interface ClassroomFilterOptions {
-  status?: number;
-  orderBy?: keyof Classroom;
-  order?: "asc" | "desc";
-}
-
-export interface ClassroomOption {
-  id: string;
-  name: string;
-}
-
-export const classroomService = {
-  getClassroomOptions: async (schoolId: string): Promise<ClassroomOption[]> => {
+export const ClassroomService = {
+  async getOptions(schoolId: string): Promise<ClassroomOption[]> {
     try {
-      return db.classroom.findMany({
+      return await db.classroom.findMany({
         where: {
           schoolId,
           status: 1,
@@ -42,19 +31,22 @@ export const classroomService = {
         },
       });
     } catch (error) {
-      console.error(error);
-      throw new ClassroomServiceError("Failed to fetch classroom options");
+      throw new ClassroomServiceError(
+        `Failed to fetch classroom options: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   },
 
-  getClassroomsBySchoolId: async (
+  async getBySchoolId(
     schoolId: string,
     options: ClassroomFilterOptions = {}
-  ): Promise<Classroom[]> => {
+  ): Promise<ClassroomWithStudentCount[]> {
     try {
       const { status = 1, orderBy = "createdAt", order = "desc" } = options;
 
-      return db.classroom.findMany({
+      return await db.classroom.findMany({
         where: {
           schoolId,
           status,
@@ -71,12 +63,15 @@ export const classroomService = {
         },
       });
     } catch (error) {
-      console.error(error);
-      throw new ClassroomServiceError("Failed to fetch classrooms");
+      throw new ClassroomServiceError(
+        `Failed to fetch classrooms: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   },
 
-  createClassroom: async (data: ClassroomCreateData): Promise<Classroom> => {
+  async create(data: ClassroomCreateData): Promise<Classroom> {
     try {
       const existingClassroom = await db.classroom.findFirst({
         where: {
@@ -91,7 +86,7 @@ export const classroomService = {
         );
       }
 
-      const result = await db.classroom.create({
+      return await db.classroom.create({
         data: {
           name: data.name,
           school: {
@@ -101,11 +96,13 @@ export const classroomService = {
           },
         },
       });
-
-      return result;
     } catch (error) {
       if (error instanceof ClassroomServiceError) throw error;
-      throw new ClassroomServiceError("Failed to create classroom");
+      throw new ClassroomServiceError(
+        `Failed to create classroom: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   },
 };

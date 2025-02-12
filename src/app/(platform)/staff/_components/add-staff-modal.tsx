@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ClassroomOption } from "@/services/classroom";
+import type { ClassroomOption } from "@/lib/classroom/classroom.types";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { AddStaffForm } from "./add-staff-form";

@@ -21,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ClassroomOption } from "@/lib/classroom/classroom.types";
 import { cn } from "@/lib/utils";
-import { ClassroomOption } from "@/services/classroom";
 import { faker } from "@faker-js/faker";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { ClassroomService } from "@/lib/classroom/classroom.service";
 import { getUserSession } from "@/lib/session";
-import { classroomService } from "@/services/classroom";
 import { studentService } from "@/services/student";
 import { ImportIcon } from "lucide-react";
 import { AddStudentModal } from "./components/add-student-modal";
@@ -12,7 +12,7 @@ export default async function StudentsPage() {
   const schoolId = user?.schoolId;
 
   const students = await studentService.getStudentsBySchoolId(schoolId!);
-  const classrooms = await classroomService.getClassroomOptions(schoolId!);
+  const classrooms = await ClassroomService.getOptions(schoolId!);
 
   return (
     <>

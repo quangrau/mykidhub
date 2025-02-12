@@ -1,7 +1,7 @@
 "use server";
 
+import { ClassroomService } from "@/lib/classroom/classroom.service";
 import { getUserSession } from "@/lib/session";
-import { classroomService } from "@/services/classroom";
 import { revalidatePath } from "next/cache";
 import { FormValues } from "./_components/add-classroom-form";
 
@@ -16,7 +16,7 @@ export async function addClassroomAction(values: FormValues) {
   }
 
   try {
-    await classroomService.createClassroom({
+    await ClassroomService.create({
       schoolId,
       ...values,
     });

@@ -1,5 +1,5 @@
+import { ClassroomService } from "@/lib/classroom/classroom.service";
 import { getUserSession } from "@/lib/session";
-import { classroomService } from "@/services/classroom";
 import { AddClassroomModal } from "./_components/add-classroom-modal";
 import { columns } from "./_components/columns";
 import { DataTable } from "./_components/data-table";
@@ -7,7 +7,7 @@ import { DataTable } from "./_components/data-table";
 export default async function ClassroomsPage() {
   const user = await getUserSession();
   const schoolId = user?.schoolId;
-  const classrooms = await classroomService.getClassroomsBySchoolId(schoolId!);
+  const classrooms = await ClassroomService.getBySchoolId(schoolId!);
 
   return (
     <>
