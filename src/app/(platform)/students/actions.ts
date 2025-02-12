@@ -29,12 +29,15 @@ export async function addStudentAction(
   }
 
   try {
-    await StudentService.create(validatedData.data);
+    await StudentService.create({
+      ...validatedData.data,
+      schoolId,
+    });
 
     revalidatePath("/students");
     return {
       success: true,
-      message: "Staff members created.",
+      message: "Student created.",
     };
   } catch (error) {
     return {

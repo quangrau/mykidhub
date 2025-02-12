@@ -1,5 +1,5 @@
 import { db } from "@/lib/database/prisma.service";
-import { UserRole } from "@prisma/client";
+import { GuardianRelation, UserRole } from "@prisma/client";
 import type { StudentCreateData, StudentWithClassroom } from "./student.types";
 
 class StudentServiceError extends Error {
@@ -75,7 +75,7 @@ export class StudentService {
             data: {
               studentId: student.id,
               guardianId: newGuardian.id,
-              relationship: guardian.relationship,
+              relationship: guardian.relationship as GuardianRelation,
             },
           });
         } else if (guardianId && guardian?.relationship) {
@@ -84,7 +84,7 @@ export class StudentService {
             data: {
               studentId: student.id,
               guardianId,
-              relationship: guardian.relationship,
+              relationship: guardian.relationship as GuardianRelation,
             },
           });
         }

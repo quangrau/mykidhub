@@ -21,4 +21,6 @@ export type StudentOption = Prisma.StudentGetPayload<{
   };
 }>;
 
-export type StudentCreateData = z.infer<typeof studentCreateSchema>;
+export type StudentCreateData = z.infer<typeof studentCreateSchema> & {
+  schoolId: string;
+};

@@ -1,11 +1,7 @@
 "use client";
 
-import { faker } from "@faker-js/faker";
-import { PlusIcon } from "lucide-react";
-import Link from "next/link";
-import { useState, useTransition } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import FormError from "@/components/form-error";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -29,7 +25,13 @@ import {
 import type { ClassroomOption } from "@/lib/classroom/classroom.types";
 import { studentCreateSchema } from "@/lib/student/student.schema";
 import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { faker } from "@faker-js/faker";
+import { PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { addStudentAction } from "../actions";
 
 interface AddStudentFormProps {
   classrooms: Array<ClassroomOption>;
@@ -53,22 +55,23 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof studentCreateSchema>) => {
-    console.log("onSubmit", values);
-    // startTransition(() => {
-    //   StudentService.create(values)
-    //     .then((result) => {
-    //       console.log({ result });
-    //       toast("Student created successfully");
-
-    //       form.reset();
-    //       onCancel();
-    //     })
-    //     .catch((error) => {
-    //       form.setError("root", { type: "custom", message: error.message });
-    //     });
-    // });
-  };
+  async function onSubmit(values: z.infer<typeof studentCreateSchema>) {
+    startTransition(() => {
+      addStudentAction(values)
+        .then((result) => {
+          if (result.success) {
+            toast.success(result.message);
+            form.reset();
+            onCancel();
+          } else {
+            form.setError("root", { type: "custom", message: result.message });
+          }
+        })
+        .catch((error) => {
+          form.setError("root", { type: "custom", message: error.message });
+        });
+    });
+  }
 
   return (
     <Form {...form}>
@@ -160,15 +163,15 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                 setHasExistingFamily(isChecked);
 
                 // Reset form values when toggling between guardian types
-                // form.reset({
-                //   ...form.getValues(),
-                //   guardianId: isChecked ? "" : undefined,
-                //   guardian: {
-                //     name: !isChecked ? "" : undefined,
-                //     email: !isChecked ? "" : undefined,
-                //     phone: !isChecked ? "" : undefined,
-                //   },
-                // });
+                form.reset({
+                  ...form.getValues(),
+                  guardianId: isChecked ? "" : undefined,
+                  guardian: {
+                    name: !isChecked ? "" : undefined,
+                    email: !isChecked ? "" : undefined,
+                    phone: !isChecked ? "" : undefined,
+                  },
+                });
               }}
             />
             <label
@@ -190,6 +193,12 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                       <Input
                         placeholder="Enter existing guardian name"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+
+                          // Reset guardianId when guardian name changes
+                          form.setValue("guardianId", "123456");
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -286,7 +295,9 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
           <Button variant="outline" type="button" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">{isPending ? "Creating..." : "Create"}</Button>
+          <Button type="submit" aria-disabled={isPending} disabled={isPending}>
+            {isPending ? "Creating..." : "Create"}
+          </Button>
         </div>
       </form>
     </Form>
