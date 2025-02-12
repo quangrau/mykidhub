@@ -1,4 +1,4 @@
-import { db } from "@/lib/database/prisma";
+import { db } from "@/lib/database/prisma.service";
 import { Prisma, UserRole } from "@prisma/client";
 
 export class StaffServiceError extends Error {

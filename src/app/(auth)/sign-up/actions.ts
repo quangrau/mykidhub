@@ -1,7 +1,7 @@
 "use server";
 
 import { getUserByEmail } from "@/data/user";
-import { db } from "@/lib/database/prisma";
+import { db } from "@/lib/database/prisma.service";
 import { generateSlug, hashPassword } from "@/lib/utils";
 import { SignUpSchema } from "@/schemas";
 import schoolService from "@/services/school";

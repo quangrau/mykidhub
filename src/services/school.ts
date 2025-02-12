@@ -1,4 +1,4 @@
-import { db } from "@/lib/database/prisma";
+import { db } from "@/lib/database/prisma.service";
 import { School, User, UserRole } from "@prisma/client";
 
 interface RegisterSchoolWithAdminInput {

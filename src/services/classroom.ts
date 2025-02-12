@@ -1,4 +1,4 @@
-import { db } from "@/lib/database/prisma";
+import { db } from "@/lib/database/prisma.service";
 import { Classroom } from "@prisma/client";
 
 class ClassroomServiceError extends Error {

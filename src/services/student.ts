@@ -1,4 +1,4 @@
-import { db } from "@/lib/database/prisma";
+import { db } from "@/lib/database/prisma.service";
 import { Prisma, Student } from "@prisma/client";
 
 export interface StudentWithClassroom extends Student {
