@@ -34,94 +34,87 @@ model Account {
 
 enum UserRole {
   ADMIN
-  USER
-}
-
-model User {
-  id            String            @id @default(cuid())
-  name          String?
-  email         String            @unique
-  emailVerified DateTime?
-  image         String?
-  password      String?
-  role          UserRole          @default(USER)
-  accounts      Account[]
-  staff         StaffProfile?     @relation("UserToStaffProfile")
-  guardians     GuardianProfile[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum StaffRole {
-  ADMIN
   SCHOOL_ADMIN
   TEACHER
   GUARDIAN
 }
 
-model School {
-  id         String         @id @default(cuid())
-  name       String
-  slug       String         @unique
-  adminEmail String
-  phone      String?
-  address    String?
-  metadata   Json?          @default("{}") @db.JsonB
-  capacity   Int?           @default(0)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime?      @updatedAt
-  classrooms Classroom[]
-  students   Student[]
-  staffs     StaffProfile[]
+model User {
+  id                String   @id @default(uuid())
+  name              String?
+  phone             String?
+  email             String   @unique
+  password          String?
+  role              UserRole @default(TEACHER)
+  emailVerified     Boolean  @default(false)
+  verificationToken String?  @unique
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // School association (for staff/teachers)
+  schoolId String?
+  school   School? @relation(fields: [schoolId], references: [id])
+
+  // Relationships
+  assignedClassrooms ClassroomStaff[]
+  guardianOf         StudentGuardian[]
+  Account            Account[]
 }
 
-model StaffProfile {
-  id         String      @id @default(cuid())
-  firstName  String
-  lastName   String
-  email      String
-  phone      String?
-  role       StaffRole   @default(TEACHER)
-  status     Int         @default(1)
-  school     School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  schoolId   String
-  user       User?       @relation("UserToStaffProfile", fields: [userId], references: [id])
-  userId     String?     @unique
-  classrooms Classroom[]
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime?   @updatedAt
+model School {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([email, schoolId])
-  @@index([email])
-  @@index([status])
+  // Relationships
+  staff      User[]
+  students   Student[]
+  classrooms Classroom[]
 }
 
 model Classroom {
-  id        String         @id @default(cuid())
-  name      String
-  schoolId  String
-  capacity  Int?
-  status    Int            @default(1)
-  school    School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  students  Student[]
-  staffs    StaffProfile[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime?      @updatedAt
+  id         String   @id @default(uuid())
+  name       String
+  gradeLevel String?
+  status     Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationships
+  schoolId String
+  school   School           @relation(fields: [schoolId], references: [id])
+  staff    ClassroomStaff[]
+  students Student[]
 }
 
 model Student {
-  id          String            @id @default(cuid())
-  firstName   String
-  lastName    String
-  dateOfBirth DateTime?
+  id        String    @id @default(uuid())
+  firstName String
+  lastName  String
+  dob       DateTime?
+  status    Int       @default(1)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relationships
   schoolId    String
+  school      School            @relation(fields: [schoolId], references: [id])
+  classroomId String?
+  classroom   Classroom?        @relation(fields: [classroomId], references: [id])
+  guardians   StudentGuardian[]
+}
+
+model ClassroomStaff {
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
   classroomId String
-  school      School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  classroom   Classroom         @relation(fields: [classroomId], references: [id])
-  guardians   GuardianProfile[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime?         @updatedAt
+  classroom   Classroom @relation(fields: [classroomId], references: [id])
+  assignedAt  DateTime  @default(now())
+
+  @@id([userId, classroomId])
 }
 
 enum InvitationStatus {
@@ -130,22 +123,14 @@ enum InvitationStatus {
   SIGNED_UP
 }
 
-model GuardianProfile {
-  id           String           @id @default(cuid())
-  firstName    String
-  lastName     String
-  email        String
-  phone        String?
-  relationship String?
-  status       InvitationStatus @default(NOT_INVITED)
-  studentId    String
-  student      Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  user         User?            @relation(fields: [userId], references: [id])
-  userId       String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime?        @updatedAt
+model StudentGuardian {
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id])
+  guardianId String
+  guardian   User             @relation(fields: [guardianId], references: [id])
+  status     InvitationStatus @default(NOT_INVITED)
 
-  @@unique([userId, studentId])
-  @@index([email])
-  @@index([status])
+  createdAt DateTime @default(now())
+
+  @@id([studentId, guardianId])
 }

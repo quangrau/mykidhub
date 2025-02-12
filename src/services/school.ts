@@ -1,5 +1,18 @@
 import { db } from "@/lib/db";
-import { Prisma, School } from "@prisma/client";
+import { School, User, UserRole } from "@prisma/client";
+
+interface RegisterSchoolWithAdminInput {
+  school: {
+    name: string;
+    slug: string;
+    address?: string;
+  };
+  user: {
+    email: string;
+    password: string;
+    name?: string;
+  };
+}
 
 class SchoolServiceError extends Error {
   constructor(message: string) {
@@ -9,23 +22,37 @@ class SchoolServiceError extends Error {
 }
 
 export const schoolService = {
-  async createSchool(data: Prisma.SchoolCreateInput): Promise<School> {
+  async registerSchoolWithAdmin(
+    input: RegisterSchoolWithAdminInput
+  ): Promise<{ school: School; user: User }> {
     try {
-      const existingSchool = await db.school.findFirst({
-        where: { name: data.name },
+      return await db.$transaction(async (tx) => {
+        // Create the new school
+        const school = await tx.school.create({
+          data: {
+            name: input.school.name,
+            slug: input.school.slug,
+            address: input.school.address,
+          },
+        });
+
+        // Create the new user and associate with the school
+        const user = await tx.user.create({
+          data: {
+            name: input.user.name,
+            email: input.user.email,
+            password: input.user.password, // Hash this before storing in production
+            role: UserRole.SCHOOL_ADMIN, // First user is automatically a staff (admin by business logic)
+            schoolId: school.id,
+            emailVerified: false, // Default false, assuming email verification is needed
+          },
+        });
+
+        return { school, user };
       });
-
-      if (existingSchool) {
-        throw new SchoolServiceError("School with this name already exists");
-      }
-
-      const result = await db.school.create({ data });
-
-      return result;
     } catch (error) {
-      if (error instanceof SchoolServiceError) throw error;
-      console.error("Error creating school:", error);
-      throw new SchoolServiceError("Failed to create school");
+      console.error("Error registering school with admin:", error);
+      throw new SchoolServiceError("Failed to register school with admin");
     }
   },
 

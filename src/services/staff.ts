@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AccountRole, Prisma } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 
 export class StaffServiceError extends Error {
   constructor(message: string) {
@@ -11,8 +11,8 @@ export class StaffServiceError extends Error {
 type CreateStaffInput = {
   name: string;
   email: string;
-  phone: string;
-  role?: AccountRole;
+  phone?: string;
+  role: "SCHOOL_ADMIN" | "TEACHER";
   schoolId: string;
   classroomIds?: string[];
 };
@@ -20,17 +20,10 @@ type CreateStaffInput = {
 export const staffService = {
   async createStaff(input: CreateStaffInput) {
     try {
-      const {
-        name,
-        email,
-        phone,
-        role = AccountRole.TEACHER,
-        schoolId,
-        classroomIds,
-      } = input;
+      const { name, email, phone, role, schoolId, classroomIds } = input;
 
       // Check if staff with email already exists in the school
-      const existingStaff = await db.staffSchool.findFirst({
+      const existingStaff = await db.user.findFirst({
         where: {
           email,
           schoolId,
@@ -43,12 +36,18 @@ export const staffService = {
         );
       }
 
+      // Check if role is not valid
+      if (role && ![UserRole.SCHOOL_ADMIN, UserRole.TEACHER].includes(role)) {
+        throw new StaffServiceError("Invalid role");
+      }
+
       // Create staff profile
-      const staff = await db.staffSchool.create({
+      const staff = await db.user.create({
         data: {
-          name,
           email,
+          name,
           phone,
+          role,
           school: {
             connect: { id: schoolId },
           },
@@ -60,22 +59,36 @@ export const staffService = {
               }
             : {}),
         },
-        include: {
-          classrooms: true,
-          school: true,
-        },
       });
 
       return staff;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        throw new StaffServiceError(
-          "Database error occurred while creating staff"
-        );
-      }
-      if (error instanceof StaffServiceError) {
-        throw error;
-      }
+      console.error("Error creating staff:", error);
+      throw new StaffServiceError("An unexpected error occurred");
+    }
+  },
+
+  async getStaffBySchoolId(schoolId: string) {
+    const withoutPassword = Prisma.validator<Prisma.UserOmit>()({
+      password: true,
+    });
+
+    try {
+      return await db.user.findMany({
+        where: {
+          schoolId,
+        },
+        omit: withoutPassword,
+        include: {
+          assignedClassrooms: {
+            include: {
+              classroom: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error getting staff by school ID:", error);
       throw new StaffServiceError("An unexpected error occurred");
     }
   },

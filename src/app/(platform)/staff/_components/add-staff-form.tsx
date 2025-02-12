@@ -1,9 +1,13 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
-import { AlertDestructive } from "@/components/ui/alert-destructive";
+import { faker } from "@faker-js/faker";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -21,10 +25,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createStaffSchema } from "@/schemas";
 import { ClassroomOption } from "@/services/classroom";
-import { faker } from "@faker-js/faker";
+import { UserRole } from "@prisma/client";
 import { addStaffAction } from "../actions";
-import { StaffFormData, staffFormSchema } from "../data/schema";
 
 interface AddStaffFormProps {
   classrooms: Array<ClassroomOption>;
@@ -32,48 +36,43 @@ interface AddStaffFormProps {
 }
 
 export function AddStaffForm({ onCancel, classrooms }: AddStaffFormProps) {
-  const form = useForm<StaffFormData>({
-    resolver: zodResolver(staffFormSchema),
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<z.infer<typeof createStaffSchema>>({
+    resolver: zodResolver(createStaffSchema),
     defaultValues: {
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
       email: faker.internet.email(),
       phone: faker.phone.number(),
-      role: "teacher",
+      role: UserRole.TEACHER,
     },
   });
 
-  const onSubmit = async (values: StaffFormData) => {
-    const result = await addStaffAction(values);
-
-    console.log({ result });
-
-    if (!result.success) {
-      form.setError("root", { type: "custom", message: result.message });
-    } else {
-      form.reset();
-      // onCancel();
-    }
+  const onSubmit = async (values: z.infer<typeof createStaffSchema>) => {
+    startTransition(() => {
+      addStaffAction(values)
+        .then((result) => {
+          if (result.success) {
+            toast.success(result.message);
+            onCancel();
+          } else {
+            form.setError("root", {
+              type: "custom",
+              message: result.message,
+            });
+          }
+        })
+        .catch((error) => {
+          form.setError("root", { type: "custom", message: error?.message });
+        });
+    });
   };
-
-  function renderErrors() {
-    if (!form.formState.errors.root) {
-      return null;
-    }
-
-    return (
-      <AlertDestructive
-        title="Error"
-        description={form.formState.errors.root.message}
-      />
-    );
-  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4">
-          {renderErrors()}
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
@@ -198,12 +197,8 @@ export function AddStaffForm({ onCancel, classrooms }: AddStaffFormProps) {
           <Button variant="outline" type="button" onClick={onCancel}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            aria-disabled={form.formState.isSubmitting}
-            disabled={form.formState.isSubmitting}
-          >
-            Save
+          <Button type="submit" aria-disabled={isPending} disabled={isPending}>
+            {isPending ? "Saving..." : "Save"}
           </Button>
         </div>
       </form>

@@ -94,7 +94,6 @@ export const classroomService = {
       const result = await db.classroom.create({
         data: {
           name: data.name,
-          capacity: data.capacity,
           school: {
             connect: {
               id: data.schoolId,

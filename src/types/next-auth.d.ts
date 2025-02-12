@@ -3,9 +3,12 @@ import { DefaultSession } from "next-auth";
 
 type ExtendedUser = {
   id: string;
-  role?: StaffRole;
-  schoolId?: unknown;
-  schoolName?: unknown;
+  name: string;
+  email: string;
+  image?: string;
+  role: StaffRole;
+  schoolId?: string;
+  schoolName?: string;
 } & DefaultSession["user"];
 
 declare module "next-auth" {

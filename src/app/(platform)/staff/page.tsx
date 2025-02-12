@@ -1,14 +1,17 @@
 import { getUserSession } from "@/lib/auth";
 import { classroomService } from "@/services/classroom";
-import { AddStaffModal } from "./components/add-staff-modal";
-// import { columns } from "./components/columns";
-// import { DataTable } from "./components/data-table";
+import { staffService } from "@/services/staff";
+import { AddStaffModal } from "./_components/add-staff-modal";
+import { columns } from "./_components/columns";
+import { DataTable } from "./_components/data-table";
 
 export default async function StaffPage() {
   const user = await getUserSession();
   const schoolId = user?.schoolId;
-
   const classrooms = await classroomService.getClassroomOptions(schoolId!);
+  const staffs = await staffService.getStaffBySchoolId(schoolId!);
+
+  console.log(staffs);
 
   return (
     <>
@@ -24,7 +27,7 @@ export default async function StaffPage() {
         </div>
       </div>
 
-      {/* <DataTable data={[]} columns={columns} /> */}
+      <DataTable data={staffs} columns={columns} />
     </>
   );
 }

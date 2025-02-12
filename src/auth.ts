@@ -3,7 +3,7 @@ import NextAuth from "next-auth";
 
 import authConfig from "@/auth.config";
 import { db } from "@/lib/db";
-import { StaffRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import { getUserById } from "./data/user";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
@@ -18,9 +18,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       }
 
       if (token.role && session.user) {
-        session.user.role = token.role as StaffRole;
-        session.user.schoolId = token.schoolId;
-        session.user.schoolName = token.schoolName;
+        session.user.role = token.role as UserRole;
+        session.user.schoolId = token.schoolId as string | undefined;
+        session.user.schoolName = token.schoolName as string | undefined;
       }
 
       return session;
@@ -35,11 +35,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return token;
       }
 
-      if (existingUser.staff) {
-        token.role = existingUser.staff.role;
-        token.schoolId = existingUser.staff.school.id;
-        token.schoolName = existingUser.staff.school.name;
-      }
+      token.role = existingUser.role;
+      token.schoolId = existingUser.schoolId;
+      token.schoolName = existingUser.school?.name;
 
       return token;
     },

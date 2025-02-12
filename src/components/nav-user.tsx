@@ -28,16 +28,13 @@ import {
 import { signOut } from "next-auth/react";
 
 interface Props {
-  userName?: string | null;
-  userEmail?: string | null;
-  userImage?: string | null;
+  userName?: string;
+  userEmail?: string;
+  userImage?: string;
 }
 
-export function NavUser({ userName, userEmail, userImage }: Props) {
+export function NavUser({ userName = "--", userEmail, userImage }: Props) {
   const { isMobile } = useSidebar();
-  if (!userName) {
-    return null;
-  }
 
   const nickName = userName.slice(0, 2).toUpperCase();
 

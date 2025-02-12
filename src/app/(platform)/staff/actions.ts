@@ -1,10 +1,15 @@
 "use server";
 
-import { getUserSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { StaffFormData } from "./data/schema";
+import { z } from "zod";
 
-export async function addStaffAction(data: StaffFormData) {
+import { getUserSession } from "@/lib/auth";
+import { createStaffSchema } from "@/schemas";
+import { staffService } from "@/services/staff";
+
+export async function addStaffAction(
+  values: z.infer<typeof createStaffSchema>
+) {
   const user = await getUserSession();
   const schoolId = user?.schoolId;
 
@@ -15,16 +20,35 @@ export async function addStaffAction(data: StaffFormData) {
     };
   }
 
+  const validatedData = await createStaffSchema.safeParse(values);
+  if (!validatedData.success) {
+    return {
+      success: false,
+      message: "Invalid params.",
+    };
+  }
+
   try {
-    // await classroomService.createStaff({});
-    console.log(data);
+    const { firstName, lastName, email, phone, role, classroomId } =
+      validatedData.data;
+
+    await staffService.createStaff({
+      email,
+      phone,
+      name: `${firstName} ${lastName}`,
+      role: role as "SCHOOL_ADMIN" | "TEACHER",
+      schoolId,
+      classroomIds: classroomId ? [classroomId] : undefined,
+    });
 
     revalidatePath("/staffs");
+
     return {
       success: true,
-      message: "Staff added successfully.",
+      message: "Staff members created.",
     };
-  } catch (error: unknown) {
+  } catch (error) {
+    console.error("Error adding staff:", error);
     return {
       success: false,
       message:

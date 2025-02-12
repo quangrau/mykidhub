@@ -1,8 +1,8 @@
 import { getUserSession } from "@/lib/auth";
 import { classroomService } from "@/services/classroom";
-import { AddClassroomModal } from "./components/add-classroom-modal";
-import { columns } from "./components/columns";
-import { DataTable } from "./components/data-table";
+import { AddClassroomModal } from "./_components/add-classroom-modal";
+import { columns } from "./_components/columns";
+import { DataTable } from "./_components/data-table";
 
 export default async function ClassroomsPage() {
   const user = await getUserSession();

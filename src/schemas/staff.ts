@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const staffFormSchema = z.object({
+export const createStaffSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
@@ -8,5 +8,3 @@ export const staffFormSchema = z.object({
   role: z.string().min(1, "Role is required"),
   classroomId: z.string().optional(),
 });
-
-export type StaffFormData = z.infer<typeof staffFormSchema>;

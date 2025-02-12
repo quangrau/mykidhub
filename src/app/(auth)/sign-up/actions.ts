@@ -4,7 +4,7 @@ import { getUserByEmail } from "@/data/user";
 import { db } from "@/lib/db";
 import { generateSlug, hashPassword } from "@/lib/utils";
 import { SignUpSchema } from "@/schemas";
-import { StaffRole } from "@prisma/client";
+import schoolService from "@/services/school";
 import { z } from "zod";
 
 export async function signupAction(formData: z.infer<typeof SignUpSchema>) {
@@ -44,35 +44,18 @@ export async function signupAction(formData: z.infer<typeof SignUpSchema>) {
       };
     }
 
-    // Create school
-    const school = await db.school.create({
-      data: {
-        name: schoolName,
-        slug: schoolSlug,
-        adminEmail: userEmail,
-      },
-    });
+    // TODO: Check if admin's email already exist.
 
-    // Create user
-    const nameParts = userName.split(" ");
-    await db.user.create({
-      data: {
+    // Create school
+    await schoolService.registerSchoolWithAdmin({
+      user: {
         name: userName,
         email: userEmail,
         password: hashedPassword,
-        staff: {
-          create: {
-            firstName: nameParts[0],
-            lastName: nameParts[nameParts.length - 1],
-            email: userEmail,
-            role: StaffRole.SCHOOL_ADMIN,
-            school: {
-              connect: {
-                id: school.id,
-              },
-            },
-          },
-        },
+      },
+      school: {
+        name: schoolName,
+        slug: schoolSlug,
       },
     });
 
