@@ -1,6 +1,6 @@
 "use server";
 
-import { getUserSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/session";
 import { classroomService } from "@/services/classroom";
 import { revalidatePath } from "next/cache";
 import { FormValues } from "./_components/add-classroom-form";

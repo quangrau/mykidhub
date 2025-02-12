@@ -1,4 +1,4 @@
-import { getUserSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/session";
 import { classroomService } from "@/services/classroom";
 import { AddClassroomModal } from "./_components/add-classroom-modal";
 import { columns } from "./_components/columns";

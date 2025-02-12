@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { getUserSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/session";
 import { classroomService } from "@/services/classroom";
 import { studentService } from "@/services/student";
 import { ImportIcon } from "lucide-react";

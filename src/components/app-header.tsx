@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { getBreadcrumbs } from "@/lib/breadcrumbs";
+import { getBreadcrumbs } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { Fragment } from "react";
 

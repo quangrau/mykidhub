@@ -1,5 +1,5 @@
 import { User } from "@/components/user";
-import { getUserSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/session";
 export default async function Home() {
   const userSession = await getUserSession();
   console.log("Dashboard", { userSession });

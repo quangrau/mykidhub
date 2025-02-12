@@ -2,6 +2,8 @@ import { hash } from "bcryptjs";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+export * from "./breadcrumbs";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

@@ -1,6 +1,6 @@
 "use server";
 
-import { getUserSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/session";
 import { studentService } from "@/services/student";
 import { AccountRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";

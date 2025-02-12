@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { getUserSession } from "@/lib/auth";
+import { getUserSession } from "@/lib/session";
 import { createStaffSchema } from "@/schemas";
 import { staffService } from "@/services/staff";
 
