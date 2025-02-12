@@ -9,16 +9,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Classroom, User } from "@prisma/client";
+import type { StaffWithClassrooms } from "@/lib/staff/staff.types";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 
-type UserWithAssignedClassrooms = Omit<User, "password"> & {
-  assignedClassrooms: Classroom[];
-};
-
-export const columns: ColumnDef<UserWithAssignedClassrooms>[] = [
+export const columns: ColumnDef<StaffWithClassrooms>[] = [
   {
     accessorKey: "name",
     header: "Name",

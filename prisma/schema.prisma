@@ -123,12 +123,22 @@ enum InvitationStatus {
   SIGNED_UP
 }
 
+enum GuardianRelation {
+  PARENT
+  FATHER
+  MOTHER
+  GRANDPARENT
+  NANNY
+  OTHER
+}
+
 model StudentGuardian {
-  studentId  String
-  student    Student          @relation(fields: [studentId], references: [id])
-  guardianId String
-  guardian   User             @relation(fields: [guardianId], references: [id])
-  status     InvitationStatus @default(NOT_INVITED)
+  studentId    String
+  student      Student          @relation(fields: [studentId], references: [id])
+  guardianId   String
+  guardian     User             @relation(fields: [guardianId], references: [id])
+  status       InvitationStatus @default(NOT_INVITED)
+  relationship GuardianRelation
 
   createdAt DateTime @default(now())
 

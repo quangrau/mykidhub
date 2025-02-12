@@ -1,26 +1,22 @@
 import { db } from "@/lib/database/prisma.service";
-import { Prisma, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
+import {
+  StaffCreateData,
+  StaffWithClassrooms,
+  staffWithClassroomsQuery,
+} from "./staff.types";
 
-export class StaffServiceError extends Error {
+class StaffServiceError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "StaffServiceError";
   }
 }
 
-type CreateStaffInput = {
-  name: string;
-  email: string;
-  phone?: string;
-  role: "SCHOOL_ADMIN" | "TEACHER";
-  schoolId: string;
-  classroomIds?: string[];
-};
-
-export const staffService = {
-  async createStaff(input: CreateStaffInput) {
+export const StaffService = {
+  async create(data: StaffCreateData): Promise<StaffWithClassrooms> {
     try {
-      const { name, email, phone, role, schoolId, classroomIds } = input;
+      const { name, email, phone, role, schoolId, classroomIds } = data;
 
       // Check if staff with email already exists in the school
       const existingStaff = await db.user.findFirst({
@@ -42,7 +38,7 @@ export const staffService = {
       }
 
       // Create staff profile
-      const staff = await db.user.create({
+      return await db.user.create({
         data: {
           email,
           name,
@@ -53,32 +49,39 @@ export const staffService = {
           },
           ...(classroomIds && classroomIds.length > 0
             ? {
-                classrooms: {
-                  connect: classroomIds.map((id) => ({ id })),
+                assignedClassrooms: {
+                  create: classroomIds.map((classroomId) => ({
+                    classroom: {
+                      connect: { id: classroomId },
+                    },
+                  })),
                 },
               }
             : {}),
         },
+        ...staffWithClassroomsQuery,
       });
-
-      return staff;
     } catch (error) {
-      console.error("Error creating staff:", error);
-      throw new StaffServiceError("An unexpected error occurred");
+      if (error instanceof StaffServiceError) throw error;
+      throw new StaffServiceError(
+        `Failed to create staff: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   },
 
-  async getStaffBySchoolId(schoolId: string) {
-    const withoutPassword = Prisma.validator<Prisma.UserOmit>()({
-      password: true,
-    });
-
+  async getBySchoolId(
+    schoolId: string,
+    options: { status?: number; orderBy?: string; order?: "asc" | "desc" } = {}
+  ): Promise<StaffWithClassrooms[]> {
     try {
+      const { orderBy = "createdAt", order = "desc" } = options;
+
       return await db.user.findMany({
         where: {
           schoolId,
         },
-        omit: withoutPassword,
         include: {
           assignedClassrooms: {
             include: {
@@ -86,10 +89,16 @@ export const staffService = {
             },
           },
         },
+        orderBy: {
+          [orderBy]: order,
+        },
       });
     } catch (error) {
-      console.error("Error getting staff by school ID:", error);
-      throw new StaffServiceError("An unexpected error occurred");
+      throw new StaffServiceError(
+        `Failed to fetch staff: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   },
 };

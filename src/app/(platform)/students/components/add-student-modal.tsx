@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ClassroomOption } from "@/services/classroom";
+import { ClassroomOption } from "@/lib/classroom/classroom.types";
 import { PlusIcon } from "lucide-react";
 import { AddStudentForm } from "./add-student-form";
 

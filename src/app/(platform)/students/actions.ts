@@ -1,68 +1,45 @@
 "use server";
 
-import { getUserSession } from "@/lib/session";
-import { studentService } from "@/services/student";
-import { AccountRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { StudentFormData } from "./data/schema";
+import { z } from "zod";
 
-export async function addStudentAction(values: StudentFormData) {
+import { getUserSession } from "@/lib/session";
+import { studentCreateSchema } from "@/lib/student/student.schema";
+import { StudentService } from "@/lib/student/student.service";
+
+export async function addStudentAction(
+  values: z.infer<typeof studentCreateSchema>
+) {
   const user = await getUserSession();
   const schoolId = user?.schoolId;
 
   if (!schoolId) {
     return {
-      error: "No school found.",
+      success: false,
+      message: "No school found.",
+    };
+  }
+
+  const validatedData = await studentCreateSchema.safeParse(values);
+  if (!validatedData.success) {
+    return {
+      success: false,
+      message: "Invalid params.",
     };
   }
 
   try {
-    await studentService.createStudent({
-      firstName: values.firstName,
-      lastName: values.lastName,
-      school: {
-        connect: {
-          id: schoolId,
-        },
-      },
-      classroom: {
-        connect: {
-          id: values.classroomId,
-        },
-      },
-      guardians: {
-        create: [
-          {
-            email: "alex.le@gmail.com",
-            phone: values.guardian.phone,
-            relationship: values.guardian.relationship,
-            guardian: {
-              connectOrCreate: {
-                where: {
-                  email: values.guardian.email,
-                },
-                create: {
-                  name: values.guardian.name,
-                  email: values.guardian.email,
-                  phone: values.guardian.phone,
-                  role: AccountRole.GUARDIAN,
-                  schoolId,
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
+    await StudentService.create(validatedData.data);
 
     revalidatePath("/students");
-
     return {
-      error: null,
+      success: true,
+      message: "Staff members created.",
     };
-  } catch (error: unknown) {
+  } catch (error) {
     return {
-      error:
+      success: false,
+      message:
         error instanceof Error ? error.message : "An unknown error occurred",
     };
   }

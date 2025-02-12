@@ -1,6 +1,6 @@
 import { ClassroomService } from "@/lib/classroom/classroom.service";
 import { getUserSession } from "@/lib/session";
-import { staffService } from "@/services/staff";
+import { StaffService } from "@/lib/staff/staff.service";
 import { AddStaffModal } from "./_components/add-staff-modal";
 import { columns } from "./_components/columns";
 import { DataTable } from "./_components/data-table";
@@ -9,7 +9,7 @@ export default async function StaffPage() {
   const user = await getUserSession();
   const schoolId = user?.schoolId;
   const classrooms = await ClassroomService.getOptions(schoolId!);
-  const staffs = await staffService.getStaffBySchoolId(schoolId!);
+  const staffs = await StaffService.getBySchoolId(schoolId!);
 
   return (
     <>

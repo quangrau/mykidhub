@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getUserSession } from "@/lib/session";
-import { createStaffSchema } from "@/schemas";
-import { staffService } from "@/services/staff";
+import { staffCreateSchema } from "@/lib/staff/staff.schema";
+import { StaffService } from "@/lib/staff/staff.service";
 
 export async function addStaffAction(
-  values: z.infer<typeof createStaffSchema>
+  values: z.infer<typeof staffCreateSchema>
 ) {
   const user = await getUserSession();
   const schoolId = user?.schoolId;
@@ -20,7 +20,7 @@ export async function addStaffAction(
     };
   }
 
-  const validatedData = await createStaffSchema.safeParse(values);
+  const validatedData = await staffCreateSchema.safeParse(values);
   if (!validatedData.success) {
     return {
       success: false,
@@ -32,7 +32,7 @@ export async function addStaffAction(
     const { firstName, lastName, email, phone, role, classroomId } =
       validatedData.data;
 
-    await staffService.createStaff({
+    await StaffService.create({
       email,
       phone,
       name: `${firstName} ${lastName}`,
@@ -48,7 +48,6 @@ export async function addStaffAction(
       message: "Staff members created.",
     };
   } catch (error) {
-    console.error("Error adding staff:", error);
     return {
       success: false,
       message:

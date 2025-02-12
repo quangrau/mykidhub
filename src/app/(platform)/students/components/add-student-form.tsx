@@ -1,8 +1,13 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import { faker } from "@faker-js/faker";
+import { PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import FormError from "@/components/form-error";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -22,13 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ClassroomOption } from "@/lib/classroom/classroom.types";
+import { studentCreateSchema } from "@/lib/student/student.schema";
 import { cn } from "@/lib/utils";
-import { faker } from "@faker-js/faker";
-import { PlusIcon } from "lucide-react";
-import Link from "next/link";
-import { useState } from "react";
-import { addStudentAction } from "../actions";
-import { StudentFormData, studentFormSchema } from "../data/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface AddStudentFormProps {
   classrooms: Array<ClassroomOption>;
@@ -36,48 +37,38 @@ interface AddStudentFormProps {
 }
 
 export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
+  const [isPending, startTransition] = useTransition();
   const [hasExistingFamily, setHasExistingFamily] = useState(false);
 
-  const form = useForm<StudentFormData>({
-    resolver: zodResolver(studentFormSchema),
+  const form = useForm<z.infer<typeof studentCreateSchema>>({
+    resolver: zodResolver(studentCreateSchema),
     defaultValues: {
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
-      classroomId: "",
       guardian: {
-        id: "",
         name: faker.person.fullName(),
         email: faker.internet.email(),
         phone: faker.phone.number(),
-        relationship: "parent",
       },
     },
   });
 
-  async function onSubmit(values: StudentFormData) {
-    // Process form data
-    const studentData = {
-      firstName: values.firstName,
-      lastName: values.lastName,
-      classroomId: values.classroomId,
-      guardian: {
-        id: values.guardian?.id || undefined,
-        name: values.guardian?.name,
-        email: values.guardian?.email,
-        phone: values.guardian?.phone,
-        relationship: values.guardian?.relationship,
-      },
-    };
+  const onSubmit = async (values: z.infer<typeof studentCreateSchema>) => {
+    console.log("onSubmit", values);
+    // startTransition(() => {
+    //   StudentService.create(values)
+    //     .then((result) => {
+    //       console.log({ result });
+    //       toast("Student created successfully");
 
-    // TODO: Call API to create student
-    const result = await addStudentAction(studentData);
-    if (result?.error) {
-      form.setError("firstName", { type: "custom", message: result.error });
-    } else {
-      form.reset();
-      onCancel();
-    }
-  }
+    //       form.reset();
+    //       onCancel();
+    //     })
+    //     .catch((error) => {
+    //       form.setError("root", { type: "custom", message: error.message });
+    //     });
+    // });
+  };
 
   return (
     <Form {...form}>
@@ -123,7 +114,7 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                 <FormLabel>Classroom *</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value as string}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -169,16 +160,15 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                 setHasExistingFamily(isChecked);
 
                 // Reset form values when toggling between guardian types
-                form.reset({
-                  ...form.getValues(),
-                  guardian: {
-                    id: isChecked ? "" : undefined,
-                    name: !isChecked ? "" : undefined,
-                    email: !isChecked ? "" : undefined,
-                    phone: !isChecked ? "" : undefined,
-                    relationship: !isChecked ? "" : undefined,
-                  },
-                });
+                // form.reset({
+                //   ...form.getValues(),
+                //   guardianId: isChecked ? "" : undefined,
+                //   guardian: {
+                //     name: !isChecked ? "" : undefined,
+                //     email: !isChecked ? "" : undefined,
+                //     phone: !isChecked ? "" : undefined,
+                //   },
+                // });
               }}
             />
             <label
@@ -200,11 +190,6 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                       <Input
                         placeholder="Enter existing guardian name"
                         {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          // Reset guardianId when guardian name changes
-                          form.setValue("guardian.id", "123456");
-                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -213,7 +198,7 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
               />
               <FormField
                 control={form.control}
-                name="guardian.id"
+                name="guardianId"
                 render={({ field }) => (
                   <FormItem className="hidden">
                     <Input type="hidden" {...field} />
@@ -282,14 +267,11 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="parent">Parent</SelectItem>
-                        <SelectItem value="mother">Mother</SelectItem>
-                        <SelectItem value="father">Father</SelectItem>
-                        <SelectItem value="guardian">Nanny</SelectItem>
-                        <SelectItem value="grandmother">Grandmother</SelectItem>
-                        <SelectItem value="grandfather">Grandfather</SelectItem>
-                        <SelectItem value="neighbor">Neighbor</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="MOTHER">Mother</SelectItem>
+                        <SelectItem value="FATHER">Father</SelectItem>
+                        <SelectItem value="GRANDPARENT">GrandParent</SelectItem>
+                        <SelectItem value="NANNY">Nanny</SelectItem>
+                        <SelectItem value="OTHER">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -299,11 +281,12 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
             </div>
           )}
         </div>
+        <FormError message={form.formState.errors?.root?.message} />
         <div className="flex justify-end space-x-4 pt-4">
           <Button variant="outline" type="button" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">Finish</Button>
+          <Button type="submit">{isPending ? "Creating..." : "Create"}</Button>
         </div>
       </form>
     </Form>

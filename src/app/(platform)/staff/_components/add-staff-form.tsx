@@ -25,8 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createStaffSchema } from "@/schemas";
-import { ClassroomOption } from "@/services/classroom";
+import type { ClassroomOption } from "@/lib/classroom/classroom.types";
+import { staffCreateSchema } from "@/lib/staff/staff.schema";
 import { UserRole } from "@prisma/client";
 import { addStaffAction } from "../actions";
 
@@ -38,18 +38,18 @@ interface AddStaffFormProps {
 export function AddStaffForm({ onCancel, classrooms }: AddStaffFormProps) {
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof createStaffSchema>>({
-    resolver: zodResolver(createStaffSchema),
+  const form = useForm<z.infer<typeof staffCreateSchema>>({
+    resolver: zodResolver(staffCreateSchema),
     defaultValues: {
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
       email: faker.internet.email(),
-      phone: faker.phone.number(),
+      phone: faker.phone.number({ style: "international" }),
       role: UserRole.TEACHER,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof createStaffSchema>) => {
+  const onSubmit = async (values: z.infer<typeof staffCreateSchema>) => {
     startTransition(() => {
       addStaffAction(values)
         .then((result) => {
