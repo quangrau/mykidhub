@@ -1,15 +1,15 @@
 "use server";
 
 import { getUserByEmail } from "@/data/user";
+import { signUpSchema } from "@/lib/auth/auth.schema";
 import { db } from "@/lib/database/prisma.service";
+import { SchoolService } from "@/lib/school/school.service";
 import { generateSlug, hashPassword } from "@/lib/utils";
-import { SignUpSchema } from "@/schemas";
-import schoolService from "@/services/school";
 import { z } from "zod";
 
-export async function signupAction(formData: z.infer<typeof SignUpSchema>) {
+export async function signupAction(formData: z.infer<typeof signUpSchema>) {
   // 1. Validate the form data
-  const validatedData = SignUpSchema.safeParse(formData);
+  const validatedData = signUpSchema.safeParse(formData);
   if (!validatedData.success) {
     return {
       success: false,
@@ -47,7 +47,7 @@ export async function signupAction(formData: z.infer<typeof SignUpSchema>) {
     // TODO: Check if admin's email already exist.
 
     // Create school
-    await schoolService.registerSchoolWithAdmin({
+    await SchoolService.registerSchoolWithAdmin({
       user: {
         name: userName,
         email: userEmail,

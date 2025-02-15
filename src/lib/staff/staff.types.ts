@@ -14,7 +14,12 @@ export const staffWithClassroomsQuery =
     include: {
       assignedClassrooms: {
         include: {
-          classroom: true,
+          classroom: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },

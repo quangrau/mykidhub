@@ -3,11 +3,11 @@
 import { z } from "zod";
 
 import { signIn } from "@/auth";
-import { SignInSchema } from "@/schemas";
+import { signInSchema } from "@/lib/auth/auth.schema";
 import { AuthError } from "next-auth";
 
-export async function signInAction(values: z.infer<typeof SignInSchema>) {
-  const validatedData = await SignInSchema.safeParse(values);
+export async function signInAction(values: z.infer<typeof signInSchema>) {
+  const validatedData = await signInSchema.safeParse(values);
   if (!validatedData.success) {
     return {
       success: false,

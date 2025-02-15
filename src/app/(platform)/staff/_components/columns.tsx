@@ -10,9 +10,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { StaffWithClassrooms } from "@/lib/staff/staff.types";
+import { UserRole } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import ClassroomCell from "./classroom-cell";
+import RoleCell from "./role-cell";
 
 export const columns: ColumnDef<StaffWithClassrooms>[] = [
   {
@@ -36,22 +39,19 @@ export const columns: ColumnDef<StaffWithClassrooms>[] = [
     accessorKey: "role",
     header: "Role",
     cell: ({ row }) => {
-      const role = row.getValue("role") as string;
-      return role === "SCHOOL_ADMIN" ? "Administrator" : "Teacher";
+      const role = row.getValue("role") as UserRole;
+      return <RoleCell role={role} />;
     },
   },
   {
     accessorKey: "assignedClassrooms",
     header: "Classroom",
     cell: ({ row }) => {
-      const classrooms = row.getValue("assignedClassrooms") as {
-        id: string;
-        name: string;
-      }[];
+      const assignedClassrooms = row.getValue(
+        "assignedClassrooms"
+      ) as StaffWithClassrooms["assignedClassrooms"];
 
-      return classrooms.length > 0
-        ? classrooms.map((c) => c.name).join(", ")
-        : "None assigned";
+      return <ClassroomCell classrooms={assignedClassrooms} />;
     },
   },
   {

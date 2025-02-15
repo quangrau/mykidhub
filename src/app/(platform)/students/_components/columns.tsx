@@ -29,14 +29,19 @@ export const columns: ColumnDef<Student>[] = [
   {
     accessorKey: "dob",
     header: "Date of Birth",
+    cell: ({ row }) => (
+      <div className="truncate">{row.getValue("dob") ?? "--"}</div>
+    ),
   },
   {
     accessorKey: "age",
     header: "Age",
+    cell: () => "--",
   },
   {
     accessorKey: "attendance",
     header: "Attendance status",
+    cell: () => "--",
   },
   {
     id: "actions",

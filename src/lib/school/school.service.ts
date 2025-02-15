@@ -1,18 +1,7 @@
 import { db } from "@/lib/database/prisma.service";
 import { School, User, UserRole } from "@prisma/client";
 
-interface RegisterSchoolWithAdminInput {
-  school: {
-    name: string;
-    slug: string;
-    address?: string;
-  };
-  user: {
-    email: string;
-    password: string;
-    name?: string;
-  };
-}
+import { RegisterSchoolWithAdminInput } from "./school.types";
 
 class SchoolServiceError extends Error {
   constructor(message: string) {
@@ -21,8 +10,8 @@ class SchoolServiceError extends Error {
   }
 }
 
-export const schoolService = {
-  async registerSchoolWithAdmin(
+export class SchoolService {
+  static async registerSchoolWithAdmin(
     input: RegisterSchoolWithAdminInput
   ): Promise<{ school: School; user: User }> {
     try {
@@ -54,20 +43,16 @@ export const schoolService = {
       console.error("Error registering school with admin:", error);
       throw new SchoolServiceError("Failed to register school with admin");
     }
-  },
+  }
 
-  async findSchoolById(schoolId: string): Promise<School | null> {
+  static async findSchoolById(schoolId: string): Promise<School | null> {
     try {
-      const school = await db.school.findUnique({
+      return await db.school.findUnique({
         where: { id: schoolId },
       });
-
-      return school;
     } catch (error) {
       console.error("Error finding school:", error);
       throw new SchoolServiceError("Failed to find school");
     }
-  },
-};
-
-export default schoolService;
+  }
+}

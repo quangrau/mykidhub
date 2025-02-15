@@ -16,19 +16,19 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { SignUpSchema } from "@/schemas";
+import { signUpSchema } from "@/lib/auth/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { signupAction } from "../actions";
 
-type SignUpData = z.infer<typeof SignUpSchema>;
+type SignUpData = z.infer<typeof signUpSchema>;
 
 export function SignupForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<SignUpData>({
-    resolver: zodResolver(SignUpSchema),
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       userName: "Alex Le",
       userEmail: "admin@mykidhub.com",

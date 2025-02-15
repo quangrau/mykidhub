@@ -1,14 +1,14 @@
+import { signInSchema } from "@/lib/auth/auth.schema";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { getUserByEmail } from "./data/user";
-import { SignInSchema } from "./schemas";
 
 export default {
   providers: [
     Credentials({
       authorize: async (credentials) => {
-        const validatedData = await SignInSchema.safeParse(credentials);
+        const validatedData = await signInSchema.safeParse(credentials);
         if (!validatedData.success) {
           return null;
         }

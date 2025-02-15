@@ -18,9 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { signInSchema } from "@/lib/auth/auth.schema";
 import { cn } from "@/lib/utils";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-import { SignInSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { signInAction } from "../actions";
 
-type SignInData = z.infer<typeof SignInSchema>;
+type SignInData = z.infer<typeof signInSchema>;
 
 export function SigninForm({
   className,
@@ -38,7 +38,7 @@ export function SigninForm({
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<SignInData>({
-    resolver: zodResolver(SignInSchema),
+    resolver: zodResolver(signInSchema),
     defaultValues: {
       email: "admin@mykidhub.com",
       password: "1234567890",
