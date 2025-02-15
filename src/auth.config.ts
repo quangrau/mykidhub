@@ -1,8 +1,9 @@
-import { signInSchema } from "@/lib/auth/auth.schema";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { getUserByEmail } from "./data/user";
+
+import { signInSchema } from "@/lib/auth/auth.schema";
+import { AuthService } from "@/lib/auth/auth.service";
 
 export default {
   providers: [
@@ -14,7 +15,7 @@ export default {
         }
 
         const { email, password } = validatedData.data;
-        const user = await getUserByEmail(email);
+        const user = await AuthService.getUserByEmail(email);
         if (!user || !user.password) {
           return null;
         }

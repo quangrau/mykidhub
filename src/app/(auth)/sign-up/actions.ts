@@ -1,11 +1,12 @@
 "use server";
 
-import { getUserByEmail } from "@/data/user";
+import { z } from "zod";
+
 import { signUpSchema } from "@/lib/auth/auth.schema";
+import { AuthService } from "@/lib/auth/auth.service";
 import { db } from "@/lib/database/prisma.service";
 import { SchoolService } from "@/lib/school/school.service";
 import { generateSlug, hashPassword } from "@/lib/utils";
-import { z } from "zod";
 
 export async function signupAction(formData: z.infer<typeof signUpSchema>) {
   // 1. Validate the form data
@@ -24,7 +25,7 @@ export async function signupAction(formData: z.infer<typeof signUpSchema>) {
 
   try {
     // Check if user is exist by email
-    const existingUser = await getUserByEmail(userEmail);
+    const existingUser = await AuthService.getUserByEmail(userEmail);
     if (existingUser) {
       return {
         success: false,

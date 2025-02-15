@@ -4,7 +4,7 @@ import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
 import { db } from "@/lib/database/prisma.service";
 import { UserRole } from "@prisma/client";
-import { getUserById } from "./data/user";
+import { AuthService } from "./lib/auth/auth.service";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -30,7 +30,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return token;
       }
 
-      const existingUser = await getUserById(token.sub);
+      const existingUser = await AuthService.getUserWithSchool(token.sub);
       if (!existingUser) {
         return token;
       }
