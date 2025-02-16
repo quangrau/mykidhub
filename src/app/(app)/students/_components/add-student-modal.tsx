@@ -12,14 +12,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ClassroomOption } from "@/lib/classroom/classroom.types";
+import { GuardianOption } from "@/lib/guardian/guardian.types";
 import { PlusIcon } from "lucide-react";
 import { AddStudentForm } from "./add-student-form";
 
 interface Props {
   classrooms: ClassroomOption[];
+  guardians: GuardianOption[];
 }
 
-export function AddStudentModal({ classrooms }: Props) {
+export function AddStudentModal({ classrooms, guardians }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -40,6 +42,7 @@ export function AddStudentModal({ classrooms }: Props) {
         </DialogHeader>
         <AddStudentForm
           classrooms={classrooms}
+          guardians={guardians}
           onCancel={() => setOpen(false)}
         />
       </DialogContent>

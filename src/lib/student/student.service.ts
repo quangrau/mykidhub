@@ -1,5 +1,5 @@
 import { db } from "@/lib/database/prisma.service";
-import { GuardianRelation, UserRole } from "@prisma/client";
+import { GuardianRelation, User, UserRole } from "@prisma/client";
 import type { StudentCreateData, StudentWithClassroom } from "./student.types";
 
 class StudentServiceError extends Error {
@@ -38,14 +38,8 @@ export class StudentService {
 
   static async create(data: StudentCreateData) {
     try {
-      const {
-        firstName,
-        lastName,
-        schoolId,
-        classroomId,
-        guardianId,
-        guardian,
-      } = data;
+      const { firstName, lastName, schoolId, classroomId } = data;
+      const guardian = data.guardian as User & { relationship?: string };
 
       return await db.$transaction(async (tx) => {
         // Create the student
@@ -59,10 +53,11 @@ export class StudentService {
         });
 
         // Handle guardian assignment
-        if (!guardianId && guardian) {
+        if (!guardian.id) {
           // Create a new guardian
           const newGuardian = await tx.user.create({
             data: {
+              schoolId,
               email: guardian.email,
               name: guardian.name,
               phone: guardian.phone,
@@ -73,17 +68,19 @@ export class StudentService {
           // Link the new guardian to the student
           await tx.studentGuardian.create({
             data: {
+              schoolId,
               studentId: student.id,
               guardianId: newGuardian.id,
               relationship: guardian.relationship as GuardianRelation,
             },
           });
-        } else if (guardianId && guardian?.relationship) {
+        } else if (guardian.id && guardian?.relationship) {
           // Link an existing guardian
           await tx.studentGuardian.create({
             data: {
+              schoolId,
+              guardianId: guardian.id,
               studentId: student.id,
-              guardianId,
               relationship: guardian.relationship as GuardianRelation,
             },
           });

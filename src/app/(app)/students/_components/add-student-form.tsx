@@ -1,7 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 import FormError from "@/components/form-error";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -23,22 +28,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ClassroomOption } from "@/lib/classroom/classroom.types";
+import type { GuardianOption } from "@/lib/guardian/guardian.types";
 import { studentCreateSchema } from "@/lib/student/student.schema";
 import { cn } from "@/lib/utils";
 import { faker } from "@faker-js/faker";
-import { PlusIcon } from "lucide-react";
-import Link from "next/link";
-import { useState, useTransition } from "react";
-import { toast } from "sonner";
-import { z } from "zod";
 import { addStudentAction } from "../actions";
+import { GuardianSelect } from "./guardian-select";
 
 interface AddStudentFormProps {
   classrooms: Array<ClassroomOption>;
+  guardians: Array<GuardianOption>;
   onCancel: () => void;
 }
 
-export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
+export function AddStudentForm({
+  onCancel,
+  classrooms,
+  guardians,
+}: AddStudentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [hasExistingFamily, setHasExistingFamily] = useState(false);
 
@@ -114,7 +121,7 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
             name="classroomId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Classroom *</FormLabel>
+                <FormLabel>Classroom</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value as string}
@@ -165,8 +172,8 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
                 // Reset form values when toggling between guardian types
                 form.reset({
                   ...form.getValues(),
-                  guardianId: isChecked ? "" : undefined,
                   guardian: {
+                    id: isChecked ? "" : undefined,
                     name: !isChecked ? "" : undefined,
                     email: !isChecked ? "" : undefined,
                     phone: !isChecked ? "" : undefined,
@@ -182,39 +189,24 @@ export function AddStudentForm({ onCancel, classrooms }: AddStudentFormProps) {
             </label>
           </div>
           {hasExistingFamily ? (
-            <>
-              <FormField
-                control={form.control}
-                name="guardian.email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Find a guardian or family *</FormLabel>
+            <FormField
+              control={form.control}
+              name="guardian.id"
+              render={({ field }) => {
+                return (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Select a guardian *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter existing guardian name"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-
-                          // Reset guardianId when guardian name changes
-                          form.setValue("guardianId", "123456");
-                        }}
+                      <GuardianSelect
+                        guardians={guardians}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardianId"
-                render={({ field }) => (
-                  <FormItem className="hidden">
-                    <Input type="hidden" {...field} />
-                  </FormItem>
-                )}
-              />
-            </>
+                );
+              }}
+            />
           ) : (
             <div className="space-y-4">
               <FormField

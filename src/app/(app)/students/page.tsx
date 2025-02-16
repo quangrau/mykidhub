@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ClassroomService } from "@/lib/classroom/classroom.service";
+import { GuardianService } from "@/lib/guardian/guardian.service";
 import { getUserSession } from "@/lib/session";
 import { StudentService } from "@/lib/student/student.service";
 import { ImportIcon } from "lucide-react";
@@ -13,6 +14,7 @@ export default async function StudentsPage() {
 
   const students = await StudentService.getBySchoolId(schoolId!);
   const classrooms = await ClassroomService.getOptions(schoolId!);
+  const guardians = await GuardianService.getGuardianOptions(schoolId!);
 
   return (
     <>
@@ -28,7 +30,7 @@ export default async function StudentsPage() {
             Import
             <ImportIcon />
           </Button>
-          <AddStudentModal classrooms={classrooms} />
+          <AddStudentModal classrooms={classrooms} guardians={guardians} />
         </div>
       </div>
 

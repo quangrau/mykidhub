@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Student } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
@@ -23,8 +24,20 @@ export const columns: ColumnDef<Student>[] = [
     header: "Last Name",
   },
   {
-    accessorKey: "classroom.name",
+    accessorKey: "classroom",
     header: "Classroom",
+    cell: ({ row }) => {
+      const classroom = row.getValue("classroom") as {
+        id: string;
+        name: string;
+      };
+
+      if (!classroom) {
+        return "--";
+      }
+
+      return <Badge variant="outline">{classroom.name}</Badge>;
+    },
   },
   {
     accessorKey: "dob",

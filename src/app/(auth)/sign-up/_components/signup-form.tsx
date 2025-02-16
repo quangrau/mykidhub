@@ -61,6 +61,7 @@ export function SignupForm() {
           }
         })
         .catch((error) => {
+          console.log({ error });
           form.setError("root", {
             type: "custom",
             message: error?.message,
