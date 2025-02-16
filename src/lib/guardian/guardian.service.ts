@@ -1,8 +1,10 @@
 import { db } from "@/lib/database/prisma.service";
 import { UserRole } from "@prisma/client";
 import {
+  GuardianFilterOptions,
   guardianOptionQuery,
-  guardianWithStudentsQuery,
+  studentGuardianQuery,
+  StudentGuardianWithRelations,
 } from "./guardian.types";
 
 class GuardianServiceError extends Error {
@@ -15,18 +17,20 @@ class GuardianServiceError extends Error {
 export const GuardianService = {
   async getBySchoolId(
     schoolId: string,
-    options: { status?: number; orderBy?: string; order?: "asc" | "desc" } = {}
-  ) {
+    options: GuardianFilterOptions = {}
+  ): Promise<StudentGuardianWithRelations[]> {
     try {
       const { orderBy = "createdAt", order = "desc", status } = options;
 
-      return await db.user.findMany({
+      return await db.studentGuardian.findMany({
         where: {
           schoolId,
-          role: UserRole.GUARDIAN,
-          ...(status !== undefined ? { status } : {}),
+          guardian: {
+            role: UserRole.GUARDIAN,
+            ...(status !== undefined ? { status } : {}),
+          },
         },
-        ...guardianWithStudentsQuery,
+        ...studentGuardianQuery,
         orderBy: {
           [orderBy]: order,
         },

@@ -9,61 +9,63 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { GuardianWithStudents } from "@/lib/guardian/guardian.types";
+import type { StudentGuardianWithRelations } from "@/lib/guardian/guardian.types";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
-import Link from "next/link";
 
-export const columns: ColumnDef<GuardianWithStudents>[] = [
+export const columns: ColumnDef<StudentGuardianWithRelations>[] = [
   {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => (
-      <Link
-        href={`/guardians/${row.original?.id}`}
-        className="hover:text-primary"
-      >
-        <div className="truncate">{row.getValue("name")}</div>
-      </Link>
-    ),
+    accessorKey: "status",
+    header: "Signed Up",
+    // cell: ({ row }) => {
+    //   const status = row.getValue("status") as InvitationStatus;
+    //   return <Badge>{status}</Badge>;
+    // },
   },
   {
-    accessorKey: "students",
-    header: "Students",
+    accessorKey: "name",
+    header: "Guardian Name",
     cell: ({ row }) => {
-      const rows = row.original
-        .guardianOf as GuardianWithStudents["guardianOf"];
+      const guardian = row.original
+        .guardian as StudentGuardianWithRelations["guardian"];
+      return guardian.name;
+    },
+  },
+  {
+    accessorKey: "student",
+    header: "Student",
+    cell: ({ row }) => {
+      const student = row.original
+        .student as StudentGuardianWithRelations["student"];
 
-      console.log(rows);
-
-      if (!rows.length) {
+      if (!student) {
         return "--";
       }
 
-      return rows.map((item) => item.student.firstName).join(", ");
+      return student.firstName + " " + student.lastName;
     },
   },
   {
     accessorKey: "relationship",
     header: "Relationship",
-    cell: ({ row }) => {
-      const rows = row.original
-        .guardianOf as GuardianWithStudents["guardianOf"];
-
-      if (!rows.length) {
-        return "--";
-      }
-
-      return rows.map((item) => item.relationship).join(", ");
-    },
   },
   {
     accessorKey: "email",
     header: "Email",
+    cell: ({ row }) => {
+      const guardian = row.original
+        .guardian as StudentGuardianWithRelations["guardian"];
+      return guardian.email;
+    },
   },
   {
     accessorKey: "phone",
     header: "Phone",
+    cell: ({ row }) => {
+      const guardian = row.original
+        .guardian as StudentGuardianWithRelations["guardian"];
+      return guardian.phone || "--";
+    },
   },
   {
     id: "actions",

@@ -74,7 +74,7 @@ export class StudentService {
               relationship: guardian.relationship as GuardianRelation,
             },
           });
-        } else if (guardian.id && guardian?.relationship) {
+        } else if (guardian.id) {
           // Link an existing guardian
           await tx.studentGuardian.create({
             data: {

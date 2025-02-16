@@ -81,6 +81,9 @@ export const StaffService = {
       return await db.user.findMany({
         where: {
           schoolId,
+          role: {
+            in: [UserRole.SCHOOL_ADMIN, UserRole.TEACHER],
+          },
         },
         include: {
           assignedClassrooms: {

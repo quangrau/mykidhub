@@ -19,6 +19,9 @@ export const studentCreateSchema = z.object({
     [
       z.object({
         id: z.string().min(1, "Guardian is required"),
+        relationship: z.nativeEnum(GuardianRelation, {
+          required_error: "Relationship is required",
+        }),
       }),
       guardianSchema,
     ],

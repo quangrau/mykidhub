@@ -188,99 +188,101 @@ export function AddStudentForm({
               This student&apos;s family already exists
             </label>
           </div>
-          {hasExistingFamily ? (
+          <div className="space-y-4">
+            {hasExistingFamily ? (
+              <FormField
+                control={form.control}
+                name="guardian.id"
+                render={({ field }) => {
+                  return (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Select a guardian *</FormLabel>
+                      <FormControl>
+                        <GuardianSelect
+                          guardians={guardians}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+            ) : (
+              <>
+                <FormField
+                  control={form.control}
+                  name="guardian.name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Guardian name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter guardian name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="guardian.email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Guardian email *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Enter guardian email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="guardian.phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Guardian phone (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter guardian phone" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
             <FormField
               control={form.control}
-              name="guardian.id"
-              render={({ field }) => {
-                return (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Select a guardian *</FormLabel>
+              name="guardian.relationship"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Relationship *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <GuardianSelect
-                        guardians={guardians}
-                        onChange={field.onChange}
-                      />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select relationship" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                );
-              }}
+                    <SelectContent>
+                      <SelectItem value="MOTHER">Mother</SelectItem>
+                      <SelectItem value="FATHER">Father</SelectItem>
+                      <SelectItem value="GRANDPARENT">GrandParent</SelectItem>
+                      <SelectItem value="NANNY">Nanny</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          ) : (
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="guardian.name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Guardian name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter guardian name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardian.email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Guardian email *</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter guardian email"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardian.phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Guardian phone (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter guardian phone" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="guardian.relationship"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Relationship *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select relationship" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="MOTHER">Mother</SelectItem>
-                        <SelectItem value="FATHER">Father</SelectItem>
-                        <SelectItem value="GRANDPARENT">GrandParent</SelectItem>
-                        <SelectItem value="NANNY">Nanny</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
+          </div>
         </div>
         <FormError message={form.formState.errors?.root?.message} />
         <div className="flex justify-end space-x-4 pt-4">
