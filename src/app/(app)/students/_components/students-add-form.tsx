@@ -41,7 +41,7 @@ interface AddStudentFormProps {
   onCancel: () => void;
 }
 
-export function AddStudentForm({
+export function StudentsAddForm({
   onCancel,
   classrooms,
   guardians,

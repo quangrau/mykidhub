@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, UserPen, UserX } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +11,16 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Student } from "@prisma/client";
+import { Row } from "@tanstack/react-table";
+import { useStudents } from "../_context/students-context";
 
-export function DataTableRowActions() {
+interface DataTableRowActionsProps {
+  row: Row<Student>;
+}
+
+export function DataTableRowActions({ row }: DataTableRowActionsProps) {
+  const { setOpen, setCurrentRow } = useStudents();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -25,11 +33,30 @@ export function DataTableRowActions() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            setCurrentRow(row.original);
+            setOpen("edit");
+          }}
+        >
+          Edit
+          <DropdownMenuShortcut>
+            <UserPen size={16} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Delete
-          <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
+        <DropdownMenuItem
+          onClick={() => {
+            console.log("clicked!");
+            setCurrentRow(row.original);
+            setOpen("delete");
+          }}
+          className="!text-red-500"
+        >
+          Disable student
+          <DropdownMenuShortcut>
+            <UserX size={16} />
+          </DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

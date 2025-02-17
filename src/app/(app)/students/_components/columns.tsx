@@ -58,6 +58,6 @@ export const columns: ColumnDef<Student>[] = [
   },
   {
     id: "actions",
-    cell: () => <DataTableRowActions />,
+    cell: DataTableRowActions,
   },
 ];
