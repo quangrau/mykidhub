@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { signUpSchema } from "@/lib/auth/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { signupAction } from "../actions";
+import { signUpAction } from "../actions";
 
 type SignUpData = z.infer<typeof signUpSchema>;
 
@@ -41,7 +41,7 @@ export function SignupForm() {
 
   async function onSubmit(values: SignUpData) {
     startTransition(() => {
-      signupAction(values)
+      signUpAction(values)
         .then((result) => {
           if (!result.success) {
             form.setError("root", {
@@ -61,7 +61,6 @@ export function SignupForm() {
           }
         })
         .catch((error) => {
-          console.log({ error });
           form.setError("root", {
             type: "custom",
             message: error?.message,

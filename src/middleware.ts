@@ -1,42 +1,28 @@
-import NextAuth, { Session } from "next-auth";
-
-import authConfig from "@/auth.config";
-import {
-  apiAuthPrefix,
-  authRoutes,
-  DEFAULT_LOGIN_REDIRECT,
-  publicRoutes,
-} from "@/routes";
+import { getSessionCookie } from "better-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-const { auth } = NextAuth(authConfig);
-export default auth(
-  (req: NextRequest & { auth: Session | null }): Response | void => {
-    const { nextUrl } = req;
-    const isLoggedIn = !!req.auth;
+export async function middleware(request: NextRequest) {
+  const { nextUrl } = request;
+  const sessionCookie = getSessionCookie(request); // Optionally pass config as the second argument if cookie name or prefix is customized.
 
-    const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
-    const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
-    const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+  const isLoggedIn = !!sessionCookie;
+  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isAuthRoute = authRoutes.some((route) => nextUrl.pathname.startsWith(route));
 
-    if (isApiAuthRoute) {
-      return NextResponse.next();
-    }
-
-    if (isAuthRoute) {
-      if (isLoggedIn) {
-        return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
-      }
-      return NextResponse.next();
-    }
-
-    if (!isLoggedIn && !isPublicRoute) {
-      return Response.redirect(new URL("/sign-in", nextUrl));
-    }
-
+  if (isApiAuthRoute) {
     return NextResponse.next();
   }
-);
+
+  if (isAuthRoute && isLoggedIn) {
+    return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+  }
+
+  if (!isAuthRoute && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/sign-in", nextUrl));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
@@ -46,3 +32,9 @@ export const config = {
     "/(api|trpc)(.*)",
   ],
 };
+
+export const authRoutes = ["/sign-in", "/sign-up"];
+
+export const apiAuthPrefix = "/api/auth";
+
+export const DEFAULT_LOGIN_REDIRECT = "/";

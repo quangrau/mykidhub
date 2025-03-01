@@ -6,11 +6,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Authentication",
+  title: "MyKidHub - Create Account",
   description: "Authentication forms built using the components.",
 };
 
-export default function SignupPage() {
+export default async function SignUpPage() {
   return (
     <>
       <div className="container relative grid h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">

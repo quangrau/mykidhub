@@ -1,5 +1,4 @@
 import { db } from "@/lib/database/prisma.service";
-import { userWithSchoolQuery } from "./auth.types";
 
 class AuthServiceError extends Error {
   constructor(message: string) {
@@ -41,17 +40,59 @@ export const AuthService = {
     }
   },
 
-  async getUserWithSchool(userId: string) {
+  async getSchoolBySlug(slug: string) {
     try {
-      return await db.user.findUnique({
+      return await db.organization.findUnique({
         where: {
-          id: userId,
+          slug,
         },
-        ...userWithSchoolQuery,
       });
     } catch (error) {
       throw new AuthServiceError(
-        `Failed to fetch user with school: ${
+        `Failed to fetch school: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  },
+
+  async getActiveOrganization(userId: string) {
+    try {
+      return await db.member.findFirst({
+        where: {
+          userId,
+        },
+        select: {
+          organizationId: true,
+        },
+      });
+    } catch (error) {
+      throw new AuthServiceError(
+        `Failed to get active organization: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  },
+
+  async getInvitationById(id: string) {
+    try {
+      return await db.invitation.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw new AuthServiceError(
+        `Failed to get invitation: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );

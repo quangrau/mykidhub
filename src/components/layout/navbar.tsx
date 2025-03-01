@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
+// import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,10 @@ const navigation = [
 
 export function Navbar() {
   const pathname = usePathname();
+
+  function handleSignOut() {
+    //
+  }
 
   return (
     <nav className="border-b">
@@ -37,7 +41,7 @@ export function Navbar() {
             ))}
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => signOut()}>
+        <Button variant="ghost" size="sm" onClick={handleSignOut}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </Button>

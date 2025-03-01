@@ -1,150 +1,199 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("DATABASE_URL")
-  relationMode = "prisma"
-}
-
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
-}
-
-enum UserRole {
-  ADMIN
-  SCHOOL_ADMIN
-  TEACHER
-  GUARDIAN
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id                String   @id @default(uuid())
-  name              String
-  email             String   @unique
-  phone             String?
-  password          String?
-  role              UserRole @default(TEACHER)
-  emailVerified     Boolean  @default(false)
-  verificationToken String?  @unique
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id            String       @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  phone         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+  members       Member[]
+  invitations   Invitation[]
 
-  // School association (for staff/teachers)
-  schoolId String?
-  school   School? @relation(fields: [schoolId], references: [id])
-
-  // Relationships
-  assignedClassrooms ClassroomStaff[]
-  guardianOf         StudentGuardian[]
-  Account            Account[]
+  @@unique([email])
+  @@map("user")
 }
 
-model School {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  address   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  activeOrganizationId String?
+
+  @@unique([token])
+  @@index([userId, activeOrganizationId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Organization {
+  id          String       @id
+  name        String
+  slug        String?
+  logo        String?
+  createdAt   DateTime
+  metadata    String?
+  members     Member[]
+  invitations Invitation[]
+  students    Student[]
+  classrooms  Classroom[]
+
+  @@unique([slug])
+  @@map("organization")
+}
+
+model Member {
+  id                String             @id
+  organizationId    String
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role              String
+  createdAt         DateTime
+  classroomStaff    ClassroomStaff[]
+  childrenGuardians ChildrenGuardian[]
+
+  @@index([organizationId])
+  @@index([userId, organizationId])
+  @@map("member")
+}
+
+model Invitation {
+  id              String       @id
+  email           String?
+  phone           String?
+  name            String?
+  role            String
+  status          String       @default("pending")
+  expiresAt       DateTime
+  createdAt       DateTime     @default(now())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviterId       String
+  user            User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+  studentId       String?
+  studentRelation String?
+
+  @@index([organizationId])
+  @@index([email, status, expiresAt])
+  @@index([phone, status, expiresAt])
+  @@map("invitation")
+}
+
+model Student {
+  id           String    @id @default(uuid())
+  name         String
+  birthDate    DateTime?
+  medicalNotes String?
+  active       Int       @default(1)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Relationships
-  staff           User[]
-  students        Student[]
-  classrooms      Classroom[]
-  StudentGuardian StudentGuardian[]
+  organizationId   String
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  classroomId      String?
+  classroom        Classroom?         @relation(fields: [classroomId], references: [id])
+  childrenGuardian ChildrenGuardian[]
+
+  @@index([organizationId])
+  @@index([classroomId])
+  @@index([active])
+  @@map("student")
+}
+
+model ClassroomStaff {
+  id          String    @id @default(uuid())
+  classroomId String
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  memberId    String
+  member      Member    @relation(fields: [memberId], references: [id])
+  role        String?
+  createdAt   DateTime
+
+  @@unique([classroomId, memberId])
+  @@index([memberId])
+  @@map("classroom_staff")
 }
 
 model Classroom {
   id         String   @id @default(uuid())
   name       String
   gradeLevel String?
-  status     Int      @default(1)
+  capacity   Int?
+  active     Int      @default(1)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   // Relationships
-  schoolId String
-  school   School           @relation(fields: [schoolId], references: [id])
-  staff    ClassroomStaff[]
-  students Student[]
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  students       Student[]
+  classroomStaff ClassroomStaff[]
+
+  @@index([organizationId])
+  @@index([organizationId, name])
+  @@map("classroom")
 }
 
-model Student {
-  id        String    @id @default(uuid())
-  firstName String
-  lastName  String
-  dob       DateTime?
-  status    Int       @default(1)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  // Relationships
-  schoolId    String
-  school      School            @relation(fields: [schoolId], references: [id])
-  classroomId String?
-  classroom   Classroom?        @relation(fields: [classroomId], references: [id])
-  guardians   StudentGuardian[]
-}
-
-model ClassroomStaff {
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  classroomId String
-  classroom   Classroom @relation(fields: [classroomId], references: [id])
-  assignedAt  DateTime  @default(now())
-
-  @@id([userId, classroomId])
-}
-
-enum InvitationStatus {
-  NOT_INVITED
-  INVITED
-  SIGNED_UP
-}
-
-enum GuardianRelation {
-  PARENT
-  FATHER
-  MOTHER
-  GRANDPARENT
-  NANNY
-  OTHER
-}
-
-model StudentGuardian {
+model ChildrenGuardian {
+  id           String   @id @default(uuid())
   studentId    String
-  student      Student          @relation(fields: [studentId], references: [id])
-  guardianId   String
-  guardian     User             @relation(fields: [guardianId], references: [id])
-  status       InvitationStatus @default(NOT_INVITED)
-  relationship GuardianRelation
-  schoolId     String
-  school       School           @relation(fields: [schoolId], references: [id])
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  memberId     String?
+  member       Member?  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  relationship String
+  active       Int      @default(1)
+  createdAt    DateTime @default(now())
 
-  createdAt DateTime @default(now())
-
-  @@id([studentId, guardianId])
-  @@index([schoolId])
+  @@unique([studentId, memberId])
+  @@index([studentId])
+  @@map("children_guardian")
 }

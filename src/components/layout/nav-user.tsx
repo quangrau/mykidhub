@@ -25,18 +25,32 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { signOut } from "next-auth/react";
+import { authClient } from "@/lib/auth/auth.client";
+import { User } from "@prisma/client";
+import { useRouter } from "next/navigation";
 
 interface Props {
-  userName?: string;
-  userEmail?: string;
-  userImage?: string;
+  user?: User;
 }
 
-export function NavUser({ userName = "--", userEmail, userImage }: Props) {
+export function NavUser({ user }: Props) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
 
+  const userName = user?.name || "--";
+  const userImage = user?.image;
+  const userEmail = user?.email || "--";
   const nickName = userName.slice(0, 2).toUpperCase();
+
+  function handleSignOut() {
+    authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in"); // redirect to login page
+        },
+      },
+    });
+  }
 
   return (
     <SidebarMenu>
@@ -103,7 +117,7 @@ export function NavUser({ userName = "--", userEmail, userImage }: Props) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => signOut()}>
+            <DropdownMenuItem onSelect={handleSignOut}>
               <LogOut />
               Log out
             </DropdownMenuItem>

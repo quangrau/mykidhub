@@ -1,4 +1,5 @@
 import { db } from "@/lib/database/prisma.service";
+import { getSession } from "@/lib/utils/session";
 import { Classroom } from "@prisma/client";
 import type {
   ClassroomCreateData,
@@ -15,12 +16,15 @@ class ClassroomServiceError extends Error {
 }
 
 export const ClassroomService = {
-  async getOptions(schoolId: string): Promise<ClassroomOption[]> {
+  async getOptions(): Promise<ClassroomOption[]> {
     try {
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+
       return await db.classroom.findMany({
         where: {
-          schoolId,
-          status: 1,
+          organizationId,
+          active: 1,
         },
         select: {
           id: true,
@@ -40,16 +44,17 @@ export const ClassroomService = {
   },
 
   async getBySchoolId(
-    schoolId: string,
     options: ClassroomFilterOptions = {}
   ): Promise<ClassroomWithStudentCount[]> {
     try {
-      const { status = 1, orderBy = "createdAt", order = "desc" } = options;
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+      const { active = 1, orderBy = "createdAt", order = "desc" } = options;
 
       return await db.classroom.findMany({
         where: {
-          schoolId,
-          status,
+          organizationId,
+          active,
         },
         include: {
           _count: {
@@ -73,10 +78,13 @@ export const ClassroomService = {
 
   async create(data: ClassroomCreateData): Promise<Classroom> {
     try {
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+
       const existingClassroom = await db.classroom.findFirst({
         where: {
           name: data.name,
-          schoolId: data.schoolId,
+          organizationId,
         },
       });
 
@@ -89,9 +97,9 @@ export const ClassroomService = {
       return await db.classroom.create({
         data: {
           name: data.name,
-          school: {
+          organization: {
             connect: {
-              id: data.schoolId,
+              id: organizationId,
             },
           },
         },
@@ -100,6 +108,26 @@ export const ClassroomService = {
       if (error instanceof ClassroomServiceError) throw error;
       throw new ClassroomServiceError(
         `Failed to create classroom: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  },
+
+  async delete(id: string): Promise<boolean> {
+    try {
+      await db.classroom.update({
+        where: {
+          id,
+        },
+        data: {
+          active: 0,
+        },
+      });
+      return true;
+    } catch (error) {
+      throw new ClassroomServiceError(
+        `Failed to delete classroom: ${
           error instanceof Error ? error.message : "Unknown error"
         }`
       );

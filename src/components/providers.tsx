@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { SessionProvider } from "next-auth/react";
+// import { SessionProvider } from "next-auth/react";
 
 interface Props {
   children?: React.ReactNode;
@@ -9,8 +9,8 @@ interface Props {
 
 export function Providers({ children }: Props) {
   return (
-    <SessionProvider>
-      <SidebarProvider>{children}</SidebarProvider>
-    </SessionProvider>
+    // <SessionProvider>
+    <SidebarProvider>{children}</SidebarProvider>
+    // </SessionProvider>
   );
 }

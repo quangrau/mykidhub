@@ -1,13 +1,12 @@
 import { User } from "@/components/user";
-import { getUserSession } from "@/lib/session";
+import { getSession } from "@/lib/utils/session";
 export default async function Home() {
-  const userSession = await getUserSession();
-  console.log("Dashboard", { userSession });
+  const session = await getSession();
 
   return (
     <>
       <h1 className="text-2xl font-bold">Server</h1>
-      <pre>{JSON.stringify(userSession, null, 2)}</pre>
+      <pre>{JSON.stringify(session, null, 2)}</pre>
       <User />
 
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">

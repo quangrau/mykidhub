@@ -20,7 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { signInSchema } from "@/lib/auth/auth.schema";
 import { cn } from "@/lib/utils";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,6 +48,7 @@ export function SigninForm({
     startTransition(async () => {
       try {
         const result = await signInAction(values);
+
         if (!result.success) {
           form.setError("root", {
             type: "server",
@@ -56,7 +56,7 @@ export function SigninForm({
           });
         }
 
-        router.push(DEFAULT_LOGIN_REDIRECT);
+        router.push("/");
       } catch {
         form.setError("root", {
           type: "custom",

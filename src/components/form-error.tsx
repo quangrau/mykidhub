@@ -5,7 +5,7 @@ type Props = {
   message?: string;
 };
 
-export default function FormError({ title, message }: Props) {
+export default function FormError({ title = "Error", message }: Props) {
   if (!message) {
     return null;
   }

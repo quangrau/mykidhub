@@ -7,7 +7,7 @@ export interface ClassroomCreateData {
 }
 
 export interface ClassroomFilterOptions {
-  status?: number;
+  active?: number;
   orderBy?: keyof Classroom;
   order?: "asc" | "desc";
 }

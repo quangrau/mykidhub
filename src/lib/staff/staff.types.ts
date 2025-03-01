@@ -1,30 +1,31 @@
-import { Prisma } from "@prisma/client";
+import { z } from "zod";
+import { staffCreateUpdateSchema } from "./staff.schema";
 
-export type StaffCreateData = {
+export type StaffCreateUpdateData = z.infer<typeof staffCreateUpdateSchema>;
+
+export type StaffInviteData = StaffCreateUpdateData & {
+  schoolId: string;
+};
+
+export type StaffRole = "owner" | "admin" | "teacher";
+
+export type StaffStatus = "invited" | "signed_up";
+
+export type StaffWithStatus = {
+  id: string; // invitationId or memberId
+  userId?: string;
   name: string;
   email: string;
   phone?: string;
-  role: "SCHOOL_ADMIN" | "TEACHER";
-  schoolId: string;
-  classroomIds?: string[];
+  status: StaffStatus;
+  role: StaffRole;
+  created_at: Date;
+  type: "member" | "invitation";
 };
 
-export const staffWithClassroomsQuery =
-  Prisma.validator<Prisma.UserDefaultArgs>()({
-    include: {
-      assignedClassrooms: {
-        include: {
-          classroom: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-export type StaffWithClassrooms = Prisma.UserGetPayload<
-  typeof staffWithClassroomsQuery
->;
+export type GetStaffsWithStatusOptions = {
+  status?: string;
+  active?: number;
+  orderBy?: string;
+  order?: "asc" | "desc";
+};

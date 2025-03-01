@@ -1,49 +1,33 @@
-import { Prisma } from "@prisma/client";
+import { z } from "zod";
+import { guardianCreateSchema } from "./guardian.schema";
 
-export const guardianWithStudentsQuery = {
-  include: {
-    guardianOf: {
-      include: {
-        student: true,
-      },
-    },
-  },
-} as const;
+export type GuardianStatus = "not_invited" | "invited" | "signed_up";
 
-export type GuardianWithStudents = Prisma.UserGetPayload<
-  typeof guardianWithStudentsQuery
->;
-
-export const guardianOptionQuery = {
-  select: {
-    id: true,
-    name: true,
-    email: true,
-  },
-} as const;
-
-export type GuardianOption = Prisma.UserGetPayload<typeof guardianOptionQuery>;
-
-export const studentGuardianQuery = {
-  include: {
-    guardian: {
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-      },
-    },
-    student: true,
-  },
-} as const;
-
-export type StudentGuardianWithRelations = Prisma.StudentGuardianGetPayload<
-  typeof studentGuardianQuery
->;
+export type GuardianOption = {
+  memberId: string;
+  name: string;
+  email: string;
+};
 
 export interface GuardianFilterOptions {
   status?: number;
   orderBy?: string;
   order?: "asc" | "desc";
 }
+
+export type GuardianInviteData = z.infer<typeof guardianCreateSchema> & {
+  studentId: string;
+  organizationId: string;
+};
+
+export type GuardianWithStatus = {
+  id: string; // invitationId or memberId
+  name: string;
+  email: string;
+  phone?: string;
+  status: GuardianStatus;
+  studentId?: string;
+  relationship?: string;
+  created_at: Date;
+  type: "member" | "invitation";
+};

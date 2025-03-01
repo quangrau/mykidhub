@@ -1,6 +1,10 @@
 import { db } from "@/lib/database/prisma.service";
-import { GuardianRelation, User, UserRole } from "@prisma/client";
-import type { StudentCreateData, StudentWithClassroom } from "./student.types";
+import { getSession } from "@/lib/utils/session";
+import { GuardianService } from "../guardian/guardian.service";
+import {
+  studentWithClassroomQuery,
+  type StudentCreateData,
+} from "./student.types";
 
 class StudentServiceError extends Error {
   constructor(message: string) {
@@ -10,20 +14,17 @@ class StudentServiceError extends Error {
 }
 
 export class StudentService {
-  static async getBySchoolId(
-    schoolId: string
-  ): Promise<StudentWithClassroom[]> {
+  static async getStudents() {
     try {
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+
       const students = await db.student.findMany({
-        where: { schoolId },
-        include: {
-          classroom: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+        where: {
+          organizationId,
+          active: 1,
         },
+        ...studentWithClassroomQuery,
         orderBy: {
           createdAt: "desc",
         },
@@ -36,58 +37,50 @@ export class StudentService {
     }
   }
 
-  static async create(data: StudentCreateData) {
+  static async createStudent(data: StudentCreateData) {
     try {
-      const { firstName, lastName, schoolId, classroomId } = data;
-      const guardian = data.guardian as User & { relationship?: string };
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+      const { name, birthDate, classroomId } = data;
 
-      return await db.$transaction(async (tx) => {
-        // Create the student
-        const student = await tx.student.create({
+      // Create the student
+      const student = await db.student.create({
+        data: {
+          name,
+          classroomId,
+          organizationId,
+          birthDate: birthDate != "" ? birthDate : undefined,
+        },
+      });
+
+      // Create the guardian if provided
+      const guardianData = data.guardian as {
+        memberId?: string;
+        name: string;
+        email: string;
+        phone: string;
+        relationship: string;
+      };
+      if (!guardianData.memberId && guardianData.email) {
+        await GuardianService.inviteGuardian({
+          name: guardianData.name,
+          email: guardianData.email,
+          phone: guardianData.phone,
+          relationship: guardianData.relationship,
+          studentId: student.id,
+          organizationId,
+        });
+      } else {
+        await db.childrenGuardian.create({
           data: {
-            firstName,
-            lastName,
-            schoolId,
-            classroomId,
+            studentId: student.id,
+            memberId: guardianData.memberId!,
+            relationship: guardianData.relationship,
           },
         });
+      }
 
-        // Handle guardian assignment
-        if (!guardian.id) {
-          // Create a new guardian
-          const newGuardian = await tx.user.create({
-            data: {
-              schoolId,
-              email: guardian.email,
-              name: guardian.name,
-              phone: guardian.phone,
-              role: UserRole.GUARDIAN,
-            },
-          });
-
-          // Link the new guardian to the student
-          await tx.studentGuardian.create({
-            data: {
-              schoolId,
-              studentId: student.id,
-              guardianId: newGuardian.id,
-              relationship: guardian.relationship as GuardianRelation,
-            },
-          });
-        } else if (guardian.id) {
-          // Link an existing guardian
-          await tx.studentGuardian.create({
-            data: {
-              schoolId,
-              guardianId: guardian.id,
-              studentId: student.id,
-              relationship: guardian.relationship as GuardianRelation,
-            },
-          });
-        }
-
-        return student;
-      });
+      // throw new StudentServiceError("Failed to create student");
     } catch (error) {
       if (error instanceof StudentServiceError) throw error;
       console.error("Error creating student:", error);
@@ -95,23 +88,25 @@ export class StudentService {
     }
   }
 
-  static async getOptions(schoolId: string) {
+  static async getOptions() {
     try {
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+
       const students = await db.student.findMany({
-        where: { schoolId },
+        where: { organizationId },
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          name: true,
         },
         orderBy: {
-          firstName: "asc",
+          name: "asc",
         },
       });
 
       return students.map((student) => ({
         id: student.id,
-        name: `${student.firstName} ${student.lastName}`,
+        name: student.name,
       }));
     } catch (error) {
       console.error("Error finding student options:", error);

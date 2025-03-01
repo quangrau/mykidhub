@@ -1,14 +1,17 @@
 "use server";
 
+import { APIError } from "better-auth/api";
 import { z } from "zod";
 
-import { signUpSchema } from "@/lib/auth/auth.schema";
+import { createAccountFormSchema, signUpSchema } from "@/lib/auth/auth.schema";
+import { auth } from "@/lib/auth/auth.server";
 import { AuthService } from "@/lib/auth/auth.service";
 import { db } from "@/lib/database/prisma.service";
-import { SchoolService } from "@/lib/school/school.service";
-import { generateSlug, hashPassword } from "@/lib/utils";
+import { GuardianService } from "@/lib/guardian/guardian.service";
+import { StaffService } from "@/lib/staff/staff.service";
+import { generateSlug } from "@/lib/utils";
 
-export async function signupAction(formData: z.infer<typeof signUpSchema>) {
+export async function signUpAction(formData: z.infer<typeof signUpSchema>) {
   // 1. Validate the form data
   const validatedData = signUpSchema.safeParse(formData);
   if (!validatedData.success) {
@@ -18,11 +21,7 @@ export async function signupAction(formData: z.infer<typeof signUpSchema>) {
     };
   }
 
-  // 2. Create school and user
   const { userName, userEmail, userPassword, schoolName } = validatedData.data;
-  // const slug = generateSlug(validatedData.schoolName);
-  const hashedPassword = await hashPassword(userPassword);
-
   try {
     // Check if user is exist by email
     const existingUser = await AuthService.getUserByEmail(userEmail);
@@ -33,11 +32,9 @@ export async function signupAction(formData: z.infer<typeof signUpSchema>) {
       };
     }
 
-    // Check if school is exist by name or email
+    // Check if school is exist
     const schoolSlug = generateSlug(schoolName);
-    const existingSchool = await db.school.findFirst({
-      where: { slug: schoolSlug },
-    });
+    const existingSchool = await AuthService.getSchoolBySlug(schoolSlug);
     if (existingSchool) {
       return {
         success: false,
@@ -45,24 +42,94 @@ export async function signupAction(formData: z.infer<typeof signUpSchema>) {
       };
     }
 
-    // TODO: Check if admin's email already exist.
-
-    // Create school
-    await SchoolService.registerSchoolWithAdmin({
-      user: {
+    // Create user
+    const userData = await auth.api.signUpEmail({
+      body: {
         name: userName,
         email: userEmail,
-        password: hashedPassword,
+        password: userPassword,
       },
-      school: {
+    });
+
+    // Create school
+    await auth.api.createOrganization({
+      body: {
         name: schoolName,
         slug: schoolSlug,
+        userId: userData.user.id,
       },
     });
 
     return { success: true, message: "Your school has been created." };
   } catch (error) {
+    if (error instanceof APIError) {
+      return { success: false, message: error.message };
+    }
+
     return { success: false, message: "Something went wrong." };
-    throw error;
+  }
+}
+
+export async function createAccountAction(
+  formData: z.infer<typeof createAccountFormSchema>
+) {
+  // 1. Validate the form data
+  const validatedData = createAccountFormSchema.safeParse(formData);
+  if (!validatedData.success) {
+    return {
+      success: false,
+      message: "Invalid form data.",
+    };
+  }
+
+  try {
+    const { name, email, password, invitationId } = validatedData.data;
+
+    // Step 1: Verify invitationId
+    const invitation = await db.invitation.findFirst({
+      where: {
+        id: invitationId,
+      },
+    });
+    if (!invitation) {
+      return {
+        success: false,
+        message: "Invalid invitation.",
+      };
+    }
+
+    switch (invitation.role) {
+      case "admin":
+      case "teacher":
+        await StaffService.createStaffAccount({
+          name,
+          email,
+          password,
+          invitation,
+        });
+        break;
+
+      case "guardian":
+        await GuardianService.createGuardianAccount({
+          name,
+          email,
+          password,
+          invitation,
+        });
+        break;
+
+      default:
+        break;
+    }
+
+    // Step 5: Return success message
+    return { success: true, message: "Your account has been created." };
+  } catch (error) {
+    console.log({ error });
+    if (error instanceof APIError) {
+      return { success: false, message: error.message };
+    }
+
+    return { success: false, message: "Something went wrong." };
   }
 }

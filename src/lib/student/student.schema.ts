@@ -1,27 +1,21 @@
 import { z } from "zod";
 
-import { GuardianRelation } from "@prisma/client";
-
 const guardianSchema = z.object({
   name: z.string().min(1, "Guardian name is required"),
   email: z.string().email("Invalid guardian email"),
   phone: z.string().optional(),
-  relationship: z.nativeEnum(GuardianRelation, {
-    required_error: "Relationship is required",
-  }),
+  relationship: z.string().min(1, "Relationship is required"),
 });
 
 export const studentCreateSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  name: z.string().min(1, "Last name is required"),
+  birthDate: z.string().optional(),
   classroomId: z.string().optional(),
   guardian: z.union(
     [
       z.object({
-        id: z.string().min(1, "Guardian is required"),
-        relationship: z.nativeEnum(GuardianRelation, {
-          required_error: "Relationship is required",
-        }),
+        memberId: z.string().min(1, "Guardian is required"),
+        relationship: z.string().min(1, "Relationship is required"),
       }),
       guardianSchema,
     ],

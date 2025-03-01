@@ -2,9 +2,9 @@
 
 import { z } from "zod";
 
-import { signIn } from "@/auth";
 import { signInSchema } from "@/lib/auth/auth.schema";
-import { AuthError } from "next-auth";
+import { auth } from "@/lib/auth/auth.server";
+import { APIError } from "better-auth/api";
 
 export async function signInAction(values: z.infer<typeof signInSchema>) {
   const validatedData = await signInSchema.safeParse(values);
@@ -17,10 +17,11 @@ export async function signInAction(values: z.infer<typeof signInSchema>) {
 
   const { email, password } = validatedData.data;
   try {
-    await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
+    await auth.api.signInEmail({
+      body: {
+        email,
+        password,
+      },
     });
 
     return {
@@ -28,21 +29,16 @@ export async function signInAction(values: z.infer<typeof signInSchema>) {
       message: "Successfully signed in.",
     };
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return {
-            success: false,
-            message: "Invalid credentials.",
-          };
-        default:
-          return {
-            success: false,
-            message: "Something went wrong.",
-          };
-      }
+    if (error instanceof APIError) {
+      return {
+        success: false,
+        message: error.body.message,
+      };
     }
 
-    throw error;
+    return {
+      success: false,
+      message: "Something went wrong.",
+    };
   }
 }

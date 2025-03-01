@@ -11,12 +11,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Student } from "@prisma/client";
+import { StudentWithClassroom } from "@/lib/student/student.types";
 import { Row } from "@tanstack/react-table";
 import { useStudents } from "../_context/students-context";
 
 interface DataTableRowActionsProps {
-  row: Row<Student>;
+  row: Row<StudentWithClassroom>;
 }
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {

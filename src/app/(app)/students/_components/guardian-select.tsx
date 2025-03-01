@@ -39,7 +39,7 @@ export function GuardianSelect({ onChange, guardians }: GuardianSelectProps) {
       return;
     }
 
-    onChange(guardian.id);
+    onChange(guardian.memberId);
     setOpen(false);
   }
 
@@ -73,7 +73,7 @@ export function GuardianSelect({ onChange, guardians }: GuardianSelectProps) {
             <CommandGroup>
               {guardians.map((guardian) => (
                 <CommandItem
-                  key={guardian.id}
+                  key={guardian.memberId}
                   value={guardian.name}
                   onSelect={handleSelect}
                 >

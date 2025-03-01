@@ -52,8 +52,8 @@ export function StudentsAddForm({
   const form = useForm<z.infer<typeof studentCreateSchema>>({
     resolver: zodResolver(studentCreateSchema),
     defaultValues: {
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
+      name: faker.person.lastName(),
+      birthDate: "",
       guardian: {
         name: faker.person.fullName(),
         email: faker.internet.email(),
@@ -91,12 +91,12 @@ export function StudentsAddForm({
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="firstName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>First name *</FormLabel>
+                  <FormLabel>Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="John" {...field} />
+                    <Input placeholder="John Smith" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -104,12 +104,16 @@ export function StudentsAddForm({
             />
             <FormField
               control={form.control}
-              name="lastName"
+              name="birthDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Last name *</FormLabel>
+                  <FormLabel>Date of birth (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Smith" {...field} />
+                    <Input
+                      type="date"
+                      placeholder="Enter birth date"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,7 +177,7 @@ export function StudentsAddForm({
                 form.reset({
                   ...form.getValues(),
                   guardian: {
-                    id: isChecked ? "" : undefined,
+                    memberId: isChecked ? "" : undefined,
                     name: !isChecked ? "" : undefined,
                     email: !isChecked ? "" : undefined,
                     phone: !isChecked ? "" : undefined,
@@ -192,7 +196,7 @@ export function StudentsAddForm({
             {hasExistingFamily ? (
               <FormField
                 control={form.control}
-                name="guardian.id"
+                name="guardian.memberId"
                 render={({ field }) => {
                   return (
                     <FormItem className="flex flex-col">

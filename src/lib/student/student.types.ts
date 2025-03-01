@@ -2,16 +2,20 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { studentCreateSchema } from "./student.schema";
 
-export type StudentWithClassroom = Prisma.StudentGetPayload<{
+export const studentWithClassroomQuery = {
   include: {
     classroom: {
       select: {
-        id: true;
-        name: true;
-      };
-    };
-  };
-}>;
+        id: true,
+        name: true,
+      },
+    },
+  },
+};
+
+export type StudentWithClassroom = Prisma.StudentGetPayload<
+  typeof studentWithClassroomQuery
+>;
 
 export type StudentOption = Prisma.StudentGetPayload<{
   select: {
@@ -21,6 +25,4 @@ export type StudentOption = Prisma.StudentGetPayload<{
   };
 }>;
 
-export type StudentCreateData = z.infer<typeof studentCreateSchema> & {
-  schoolId: string;
-};
+export type StudentCreateData = z.infer<typeof studentCreateSchema>;
