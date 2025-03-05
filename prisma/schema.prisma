@@ -84,6 +84,7 @@ model Organization {
   invitations Invitation[]
   students    Student[]
   classrooms  Classroom[]
+  Post        Post[]
 
   @@unique([slug])
   @@map("organization")
@@ -99,6 +100,10 @@ model Member {
   createdAt         DateTime
   classroomStaff    ClassroomStaff[]
   childrenGuardians ChildrenGuardian[]
+  Post              Post[]
+  PostAudience      PostAudience[]
+  PostComment       PostComment[]
+  ReadReceipt       ReadReceipt[]
 
   @@index([organizationId])
   @@index([userId, organizationId])
@@ -196,4 +201,98 @@ model ChildrenGuardian {
   @@unique([studentId, memberId])
   @@index([studentId])
   @@map("children_guardian")
+}
+
+enum PostType {
+  ANNOUNCEMENT
+  REMINDER
+  NEWSLETTER
+  EVENT
+  POLL
+}
+
+enum PostPriorityLevel {
+  URGENT
+  HIGH
+  NORMAL
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+// Post Model
+model Post {
+  id             String            @id @default(uuid())
+  organization   Organization      @relation(fields: [organizationId], references: [id])
+  organizationId String
+  author         Member            @relation(fields: [authorId], references: [id])
+  authorId       String
+  content        String
+  type           PostType          @default(ANNOUNCEMENT) // ANNOUNCEMENT, REMINDER, NEWSLETTER, etc.
+  priority       PostPriorityLevel @default(NORMAL) // URGENT, HIGH, NORMAL
+  scheduledAt    DateTime?
+  publishedAt    DateTime          @default(now())
+  expiresAt      DateTime? // For time-sensitive reminders
+  audiences      PostAudience[]
+  comments       PostComment[]
+  readReceipts   ReadReceipt[]
+  isPinned       Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([organizationId])
+  @@index([authorId])
+  @@index([publishedAt])
+  @@map("post")
+}
+
+model PostAudience {
+  id String @id @default(uuid())
+
+  // Relations
+  post     Post    @relation(fields: [postId], references: [id])
+  postId   String
+  member   Member? @relation(fields: [memberId], references: [id])
+  memberId String?
+
+  @@index([postId])
+  @@map("post_audience")
+}
+
+// Comment Model
+model PostComment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId String
+  author   Member @relation(fields: [authorId], references: [id])
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("post_comment")
+}
+
+// Read Receipt Model
+model ReadReceipt {
+  id     String   @id @default(uuid())
+  readAt DateTime @default(now())
+
+  // Relations
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id])
+
+  @@unique([postId, memberId])
+  @@index([postId])
+  @@index([memberId])
+  @@map("read_receipt")
 }
