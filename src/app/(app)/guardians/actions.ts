@@ -43,3 +43,20 @@ export async function deleteGuardianAction(memberId: string) {
     };
   }
 }
+
+export async function reInviteGuardianInvitationAction(invitationId: string) {
+  try {
+    await GuardianService.reInviteGuardian(invitationId);
+    revalidatePath("/guardians");
+    return {
+      success: true,
+      message: "Guardian invitation resent",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}

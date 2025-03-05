@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Student } from "@prisma/client";
-import { useState } from "react";
+import { StudentWithClassroom } from "@/lib/student/student.types";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { diableStudentAction } from "../actions";
 
 interface StudentsDisableDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  currentRow: Student | null;
+  currentRow: StudentWithClassroom;
 }
 
 export function StudentsDisableDialog({
@@ -24,12 +26,21 @@ export function StudentsDisableDialog({
   onOpenChange,
   currentRow,
 }: StudentsDisableDialogProps) {
+  const [isPending, startTransition] = useTransition();
   const [selectedAction, setSelectedAction] = useState<"graduate" | "drop">();
-  const name = currentRow?.firstName + " " + currentRow?.lastName;
+  const name = currentRow.name;
 
   const onConfirm = (action: "graduate" | "drop") => {
-    console.log(action);
-    onOpenChange(false);
+    startTransition(async () => {
+      const result = await diableStudentAction(currentRow.id, action);
+
+      if (result.success) {
+        toast.success(result.message);
+        onOpenChange(false);
+      } else {
+        toast.error(result.message);
+      }
+    });
   };
 
   return (
@@ -83,9 +94,10 @@ export function StudentsDisableDialog({
           <Button
             variant="default"
             onClick={() => selectedAction && onConfirm(selectedAction)}
-            disabled={!selectedAction}
+            disabled={!selectedAction || isPending}
+            aria-disabled={!selectedAction || isPending}
           >
-            Disable Awesome Kid
+            {isPending ? "Loading..." : "Disable"}
           </Button>
         </div>
       </DialogContent>

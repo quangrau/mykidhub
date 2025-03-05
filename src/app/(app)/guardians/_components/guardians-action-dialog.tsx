@@ -15,11 +15,7 @@ interface Props {
   currentRow?: GuardianWithStatus;
 }
 
-export function GuardiansActionDialog({
-  open,
-  onOpenChange,
-  currentRow,
-}: Props) {
+export function GuardiansActionDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">

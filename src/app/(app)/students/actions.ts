@@ -33,3 +33,23 @@ export async function addStudentAction(
     };
   }
 }
+
+export async function diableStudentAction(
+  id: string,
+  action: "graduate" | "drop"
+) {
+  try {
+    await StudentService.disableStudent(id, action);
+    revalidatePath("/students");
+    return {
+      success: true,
+      message: "Student deleted.",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    };
+  }
+}

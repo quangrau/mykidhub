@@ -10,7 +10,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth/auth.client";
 import { GuardianWithStatus } from "@/lib/guardian/guardian.types";
 import { Row } from "@tanstack/react-table";
 import { useGuardians } from "../_context/guardians-context";
@@ -21,14 +20,11 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { setOpen, setCurrentRow } = useGuardians();
-  const { type, email } = row.original;
-  const isMember = type === "member";
+  const isMember = row.original.type === "member";
 
   async function handleSendInvitation() {
-    await authClient.organization.inviteMember({
-      email,
-      role: "guardian",
-    });
+    setCurrentRow(row.original);
+    setOpen("invite");
   }
 
   function handleEdit() {

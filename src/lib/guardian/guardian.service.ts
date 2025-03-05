@@ -194,6 +194,54 @@ export const GuardianService = {
     }
   },
 
+  async reInviteGuardian(invitationId: string) {
+    try {
+      // Verify invitation exists
+      const invitation = await db.invitation.findUnique({
+        where: { id: invitationId },
+      });
+
+      if (!invitation) {
+        throw new GuardianServiceError("Invitation not found");
+      }
+
+      // Delete the existing invitation
+      await db.invitation.delete({
+        where: { id: invitationId },
+      });
+
+      // Create a new invitation with the same details
+      const newInvitation = await auth.api.createInvitation({
+        headers: await headers(),
+        body: {
+          role: "guardian",
+          email: invitation.email!,
+          organizationId: invitation.organizationId,
+        },
+      });
+
+      // Update new invitation with additional data
+      await db.invitation.update({
+        where: { id: newInvitation.id },
+        data: {
+          name: invitation.name,
+          phone: invitation.phone,
+          studentId: invitation.studentId,
+          studentRelation: invitation.studentRelation,
+        },
+      });
+
+      return newInvitation;
+    } catch (error) {
+      if (error instanceof GuardianServiceError) throw error;
+      throw new GuardianServiceError(
+        `Failed to re-invite guardian: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  },
+
   async createGuardianAccount(data: {
     name: string;
     email: string;

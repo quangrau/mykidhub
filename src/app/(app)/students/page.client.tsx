@@ -2,7 +2,7 @@
 
 import { ClassroomOption } from "@/lib/classroom/classroom.types";
 import { GuardianOption } from "@/lib/guardian/guardian.types";
-import { Student } from "@prisma/client";
+import { StudentWithClassroom } from "@/lib/student/student.types";
 import { columns } from "./_components/students-columns";
 import { StudentsDialogs } from "./_components/students-dialogs";
 import { StudentsPrimaryButtons } from "./_components/students-primary-buttons";
@@ -10,7 +10,7 @@ import { StudentsTable } from "./_components/students-table";
 import StudentsProvider from "./_context/students-context";
 
 interface Props {
-  students: Student[];
+  students: StudentWithClassroom[];
   classrooms: ClassroomOption[];
   guardians: GuardianOption[];
 }

@@ -13,8 +13,8 @@ class StudentServiceError extends Error {
   }
 }
 
-export class StudentService {
-  static async getStudents() {
+export const StudentService = {
+  async getStudents() {
     try {
       const { session } = await getSession();
       const organizationId = session.activeOrganizationId!;
@@ -35,9 +35,35 @@ export class StudentService {
       console.error("Error finding students:", error);
       throw new StudentServiceError("Failed to fetch students");
     }
-  }
+  },
 
-  static async createStudent(data: StudentCreateData) {
+  async getOptions() {
+    try {
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+
+      const students = await db.student.findMany({
+        where: { organizationId },
+        select: {
+          id: true,
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      });
+
+      return students.map((student) => ({
+        id: student.id,
+        name: student.name,
+      }));
+    } catch (error) {
+      console.error("Error finding student options:", error);
+      throw new StudentServiceError("Failed to fetch student options");
+    }
+  },
+
+  async createStudent(data: StudentCreateData) {
     try {
       const { session } = await getSession();
       const organizationId = session.activeOrganizationId!;
@@ -86,31 +112,17 @@ export class StudentService {
       console.error("Error creating student:", error);
       throw new StudentServiceError("Failed to create student");
     }
-  }
+  },
 
-  static async getOptions() {
+  async disableStudent(studentId: string, action: "graduate" | "drop") {
     try {
-      const { session } = await getSession();
-      const organizationId = session.activeOrganizationId!;
-
-      const students = await db.student.findMany({
-        where: { organizationId },
-        select: {
-          id: true,
-          name: true,
-        },
-        orderBy: {
-          name: "asc",
-        },
+      await db.student.update({
+        where: { id: studentId },
+        data: { active: action === "graduate" ? -1 : 0 },
       });
-
-      return students.map((student) => ({
-        id: student.id,
-        name: student.name,
-      }));
     } catch (error) {
-      console.error("Error finding student options:", error);
-      throw new StudentServiceError("Failed to fetch student options");
+      console.error("Error disabling student:", error);
+      throw new StudentServiceError("Failed to disable student");
     }
-  }
-}
+  },
+};

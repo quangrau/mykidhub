@@ -10,7 +10,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth/auth.client";
 import { StaffWithStatus } from "@/lib/staff/staff.types";
 import { Row } from "@tanstack/react-table";
 import { useStaff } from "../_context/staff-context";
@@ -21,14 +20,11 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { setOpen, setCurrentRow } = useStaff();
-  const { type, email, role } = row.original;
-  const isMember = type === "member";
+  const isMember = row.original.type === "member";
 
   async function handleSendInvitation() {
-    await authClient.organization.inviteMember({
-      email,
-      role: role as "admin" | "teacher",
-    });
+    setCurrentRow(row.original);
+    setOpen("invite");
   }
 
   function handleEdit() {
