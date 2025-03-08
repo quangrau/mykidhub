@@ -5,9 +5,7 @@ export type Breadcrumb = {
   href?: string;
 };
 
-export function getBreadcrumbs(pathname: string): Breadcrumb[] {
-  const segments = pathname.split("/").filter((item) => item !== "");
-
+export function getBreadcrumbs(segments: string[]): Breadcrumb[] {
   if (segments.length === 0) {
     return [{ label: "Dashboard" }];
   }
