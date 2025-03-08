@@ -91,19 +91,20 @@ model Organization {
 }
 
 model Member {
-  id                String             @id
-  organizationId    String
-  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role              String
-  createdAt         DateTime
-  classroomStaff    ClassroomStaff[]
-  childrenGuardians ChildrenGuardian[]
-  Post              Post[]
-  PostAudience      PostAudience[]
-  PostComment       PostComment[]
-  ReadReceipt       ReadReceipt[]
+  id                 String             @id
+  organizationId     String
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role               String
+  createdAt          DateTime
+  classroomStaff     ClassroomStaff[]
+  childrenGuardians  ChildrenGuardian[]
+  post               Post[]
+  postAudience       PostAudience[]
+  postComment        PostComment[]
+  readReceipt        ReadReceipt[]
+  recordedAttendance Attendance[]
 
   @@index([organizationId])
   @@index([userId, organizationId])
@@ -147,6 +148,7 @@ model Student {
   classroomId      String?
   classroom        Classroom?         @relation(fields: [classroomId], references: [id])
   childrenGuardian ChildrenGuardian[]
+  attendance       Attendance[]
 
   @@index([organizationId])
   @@index([classroomId])
@@ -189,14 +191,16 @@ model Classroom {
 }
 
 model ChildrenGuardian {
-  id           String   @id @default(uuid())
-  studentId    String
-  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  memberId     String?
-  member       Member?  @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  relationship String
-  active       Int      @default(1)
-  createdAt    DateTime @default(now())
+  id                 String       @id @default(uuid())
+  studentId          String
+  student            Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  memberId           String?
+  member             Member?      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  relationship       String
+  active             Int          @default(1)
+  createdAt          DateTime     @default(now())
+  checkInAttendance  Attendance[] @relation("CheckInAttendance")
+  checkOutAttendance Attendance[] @relation("CheckOutAttendance")
 
   @@unique([studentId, memberId])
   @@index([studentId])
@@ -224,24 +228,28 @@ enum PostStatus {
 }
 
 // Post Model
+
 model Post {
-  id             String            @id @default(uuid())
-  organization   Organization      @relation(fields: [organizationId], references: [id])
+  id          String            @id @default(uuid())
+  title       String
+  content     String
+  type        PostType          @default(ANNOUNCEMENT) // ANNOUNCEMENT, REMINDER, NEWSLETTER, etc.
+  priority    PostPriorityLevel @default(NORMAL) // URGENT, HIGH, NORMAL
+  scheduledAt DateTime?
+  publishedAt DateTime          @default(now())
+  expiresAt   DateTime? // For time-sensitive reminders
+  isPinned    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  organization   Organization   @relation(fields: [organizationId], references: [id])
   organizationId String
-  author         Member            @relation(fields: [authorId], references: [id])
+  author         Member         @relation(fields: [authorId], references: [id])
   authorId       String
-  content        String
-  type           PostType          @default(ANNOUNCEMENT) // ANNOUNCEMENT, REMINDER, NEWSLETTER, etc.
-  priority       PostPriorityLevel @default(NORMAL) // URGENT, HIGH, NORMAL
-  scheduledAt    DateTime?
-  publishedAt    DateTime          @default(now())
-  expiresAt      DateTime? // For time-sensitive reminders
   audiences      PostAudience[]
   comments       PostComment[]
   readReceipts   ReadReceipt[]
-  isPinned       Boolean           @default(false)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
 
   @@index([organizationId])
   @@index([authorId])
@@ -253,16 +261,17 @@ model PostAudience {
   id String @id @default(uuid())
 
   // Relations
-  post     Post    @relation(fields: [postId], references: [id])
+  post     Post   @relation(fields: [postId], references: [id])
   postId   String
-  member   Member? @relation(fields: [memberId], references: [id])
-  memberId String?
+  member   Member @relation(fields: [memberId], references: [id])
+  memberId String
 
   @@index([postId])
   @@map("post_audience")
 }
 
 // Comment Model
+
 model PostComment {
   id        String   @id @default(uuid())
   content   String   @db.Text
@@ -281,6 +290,7 @@ model PostComment {
 }
 
 // Read Receipt Model
+
 model ReadReceipt {
   id     String   @id @default(uuid())
   readAt DateTime @default(now())
@@ -295,4 +305,41 @@ model ReadReceipt {
   @@index([postId])
   @@index([memberId])
   @@map("read_receipt")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  date      DateTime         @default(now()) @db.Date
+  status    AttendanceStatus @default(PRESENT)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Check-in details
+  checkInGuardian   ChildrenGuardian? @relation("CheckInAttendance", fields: [checkInGuardianId], references: [id])
+  checkInGuardianId String?
+  checkIn           DateTime?
+
+  // Check-out details  
+  checkOutGuardian   ChildrenGuardian? @relation("CheckOutAttendance", fields: [checkOutGuardianId], references: [id])
+  checkOutGuardianId String?
+  checkOut           DateTime?
+
+  // Relations
+  studentId    String
+  student      Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  recordedById String
+  recordedBy   Member  @relation(fields: [recordedById], references: [id])
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([date])
+  @@index([status])
+  @@map("attendance")
 }

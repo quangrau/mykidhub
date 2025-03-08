@@ -17,7 +17,13 @@ export async function getSession() {
       redirect("/sign-in");
     }
 
-    return data;
+    return data as typeof auth.$Infer.Session & {
+      session: {
+        activeOrganizationId: string;
+        memberId: string;
+        role: string;
+      };
+    };
   } catch (error) {
     console.log("Error getting session", error);
     await auth.api.signOut({

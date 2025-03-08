@@ -92,10 +92,11 @@ export const auth = betterAuth({
         user,
         session: {
           ...session,
+          memberId: member?.id,
           role: member?.role,
         },
       };
-    }),
+    }, options),
     nextCookies(),
   ],
 });

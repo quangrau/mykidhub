@@ -1,6 +1,6 @@
 "use client";
 
-import { Frame, Map, PieChart, Settings2, SquareTerminal } from "lucide-react";
+import { Frame, Map, Newspaper, PieChart, School } from "lucide-react";
 
 import { NavMain } from "@/components/layout/nav-main";
 // import { NavProjects } from "@/components/nav-projects";
@@ -28,53 +28,44 @@ const data = {
   },
   navMain: [
     {
-      title: "My School",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
+      groupKey: "school",
       items: [
         {
-          title: "Students",
-          url: "/students",
-        },
-        {
-          title: "Guardians",
-          url: "/guardians",
-        },
-        {
-          title: "Classrooms",
-          url: "/classrooms",
-        },
-        {
-          title: "Programs",
-          url: "/programs",
-        },
-        {
-          title: "Staff",
-          url: "/staff",
+          title: "My School",
+          icon: School,
+          items: [
+            {
+              title: "Students",
+              url: "/students",
+            },
+            {
+              title: "Guardians",
+              url: "/guardians",
+            },
+            {
+              title: "Classrooms",
+              url: "/classrooms",
+            },
+            {
+              title: "Programs",
+              url: "/programs",
+            },
+            {
+              title: "Staff",
+              url: "/staff",
+            },
+          ],
         },
       ],
     },
     {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
+      title: "General",
+      groupKey: "general",
       items: [
         {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          title: "Feed",
+          url: "/feed",
+          icon: Newspaper,
         },
       ],
     },
@@ -111,7 +102,6 @@ export function AppSidebar({ user, school, ...props }: AppSidebarProps) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

@@ -2,6 +2,7 @@ import { db } from "@/lib/database/prisma.service";
 import { getSession } from "@/lib/utils/session";
 import { GuardianService } from "../guardian/guardian.service";
 import {
+  studentOverviewQuery,
   studentWithClassroomQuery,
   type StudentCreateData,
 } from "./student.types";
@@ -14,6 +15,59 @@ class StudentServiceError extends Error {
 }
 
 export const StudentService = {
+  async getStudent(id: string) {
+    try {
+      const student = await db.student.findUnique({
+        where: { id },
+        ...studentWithClassroomQuery,
+      });
+
+      if (!student) {
+        throw new StudentServiceError("Student not found");
+      }
+
+      return student;
+    } catch (error) {
+      console.error("Error finding student:", error);
+      throw new StudentServiceError("Failed to fetch student");
+    }
+  },
+
+  async getStudentBasicInfo(id: string) {
+    try {
+      const student = await db.student.findUnique({
+        where: { id },
+      });
+
+      if (!student) {
+        throw new StudentServiceError("Student not found");
+      }
+
+      return student;
+    } catch (error) {
+      console.error("Error finding student:", error);
+      throw new StudentServiceError("Failed to fetch student");
+    }
+  },
+
+  async getStudentOverview(id: string) {
+    try {
+      const student = await db.student.findUnique({
+        where: { id },
+        ...studentOverviewQuery,
+      });
+
+      if (!student) {
+        throw new StudentServiceError("Student not found");
+      }
+
+      return student;
+    } catch (error) {
+      console.error("Error finding student:", error);
+      throw new StudentServiceError("Failed to fetch student");
+    }
+  },
+
   async getStudents() {
     try {
       const { session } = await getSession();

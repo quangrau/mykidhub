@@ -17,6 +17,26 @@ export type StudentWithClassroom = Prisma.StudentGetPayload<
   typeof studentWithClassroomQuery
 >;
 
+export const studentOverviewQuery = {
+  include: {
+    classroom: true,
+    childrenGuardian: {
+      include: {
+        member: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    },
+    attendance: true,
+  },
+};
+
+export type StudentOverview = Prisma.StudentGetPayload<
+  typeof studentOverviewQuery
+>;
+
 export type StudentOption = Prisma.StudentGetPayload<{
   select: {
     id: true;

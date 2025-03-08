@@ -151,6 +151,92 @@ export const GuardianService = {
     }
   },
 
+  async getGuardiansByStudentId(studentId: string) {
+    try {
+      const { session } = await getSession();
+      const organizationId = session.activeOrganizationId!;
+
+      // Get pending invitations for the student
+      const invitations = await db.invitation.findMany({
+        where: {
+          organizationId,
+          status: "pending",
+          role: "guardian",
+          studentId,
+        },
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          studentId: true,
+          studentRelation: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      // Get active guardians for the student
+      const childrenGuardians = await db.childrenGuardian.findMany({
+        where: {
+          studentId,
+        },
+        include: {
+          member: {
+            include: {
+              user: {
+                select: {
+                  name: true,
+                  phone: true,
+                  email: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          member: {
+            createdAt: "desc",
+          },
+        },
+      });
+
+      // Combine results
+      return [
+        ...invitations.map((i) => ({
+          id: i.id,
+          name: i.name,
+          phone: i.phone,
+          email: i.email,
+          status: "invited" as const,
+          studentId: i.studentId,
+          relationship: i.studentRelation,
+          created_at: i.createdAt,
+          type: "invitation",
+        })),
+        ...childrenGuardians.map((cg) => ({
+          id: cg.memberId,
+          name: cg.member?.user.name,
+          phone: cg.member?.user.phone,
+          email: cg.member?.user.email,
+          status: "signed_up" as const,
+          relationship: cg.relationship,
+          created_at: cg.member?.user.createdAt,
+          type: "member",
+        })),
+      ] as unknown as GuardianWithStatus[];
+    } catch (error) {
+      throw new GuardianServiceError(
+        `Failed to fetch guardians for student: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  },
+
   async inviteGuardian(data: {
     email: string;
     name: string;
