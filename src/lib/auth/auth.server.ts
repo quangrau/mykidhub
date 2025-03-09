@@ -1,3 +1,4 @@
+import { expo } from "@better-auth/expo";
 import { betterAuth, BetterAuthOptions, Session } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
@@ -64,6 +65,7 @@ const options = {
         });
       },
     }),
+    expo(),
   ],
 } satisfies BetterAuthOptions;
 
@@ -99,4 +101,5 @@ export const auth = betterAuth({
     }, options),
     nextCookies(),
   ],
+  trustedOrigins: ["mykidhub://"],
 });

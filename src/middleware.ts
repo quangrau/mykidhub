@@ -1,4 +1,4 @@
-import { getSessionCookie } from "better-auth";
+import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
@@ -7,7 +7,9 @@ export async function middleware(request: NextRequest) {
 
   const isLoggedIn = !!sessionCookie;
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
-  const isAuthRoute = authRoutes.some((route) => nextUrl.pathname.startsWith(route));
+  const isAuthRoute = authRoutes.some((route) =>
+    nextUrl.pathname.startsWith(route)
+  );
 
   if (isApiAuthRoute) {
     return NextResponse.next();

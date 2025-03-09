@@ -1,9 +1,10 @@
+import { createAccessControl } from "better-auth/plugins/access";
 import {
   adminAc,
-  createAccessControl,
   defaultStatements,
+  memberAc,
   ownerAc,
-} from "better-auth/plugins/access";
+} from "better-auth/plugins/organization/access";
 
 const statement = {
   ...defaultStatements,
@@ -23,9 +24,11 @@ export const admin = ac.newRole({
 });
 
 export const teacher = ac.newRole({
+  ...memberAc.statements,
   project: ["create", "update"],
 });
 
 export const guardian = ac.newRole({
+  ...memberAc.statements,
   project: [],
 });
