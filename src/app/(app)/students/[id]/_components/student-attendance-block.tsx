@@ -29,7 +29,13 @@ export default function StudentAttendanceBlock({ attendance }: Props) {
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" className="space-x-1">
+            <Button
+              variant="ghost"
+              className="space-x-1"
+              onClick={() => {
+                setOpen("add-absence");
+              }}
+            >
               <span>Add absence</span>
             </Button>
             <Button

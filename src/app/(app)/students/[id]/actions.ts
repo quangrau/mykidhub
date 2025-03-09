@@ -1,7 +1,7 @@
 "use server";
 
+import { AbsenceCreateData } from "@/lib/attendance/attendance.schema";
 import { AttendanceService } from "@/lib/attendance/attendance.service";
-import { getSession } from "@/lib/utils/session";
 import { revalidatePath } from "next/cache";
 
 interface CreateAttendanceData {
@@ -17,14 +17,16 @@ interface EditAttendanceData {
   checkOut?: string;
 }
 
+type ActionResponse = {
+  success: boolean;
+  message: string;
+};
+
 export async function createAttendanceAction(
   studentId: string,
   data: CreateAttendanceData
-) {
+): Promise<ActionResponse> {
   try {
-    const { session } = await getSession();
-    const memberId = session.memberId;
-
     // Convert date to local date string to ensure consistent date handling
     const baseDate = new Date(data.date);
     const datePart = baseDate.toISOString().split("T")[0];
@@ -39,12 +41,11 @@ export async function createAttendanceAction(
       ? new Date(`${datePart}T${data.checkOut}`)
       : undefined;
 
-    const attendance = await AttendanceService.createAttendance({
+    await AttendanceService.createAttendance({
       studentId,
       date: baseDate,
       checkIn,
       checkOut,
-      recordedById: memberId,
     });
 
     revalidatePath(`/students/${studentId}`);
@@ -52,7 +53,6 @@ export async function createAttendanceAction(
     return {
       success: true,
       message: "Attendance recorded successfully",
-      data: attendance,
     };
   } catch (error) {
     return {
@@ -68,9 +68,6 @@ export async function editAttendanceAction(
   data: EditAttendanceData
 ) {
   try {
-    const { session } = await getSession();
-    const memberId = session.memberId;
-
     // Convert date to local date string to ensure consistent date handling
     const baseDate = new Date(data.date);
     const datePart = baseDate.toISOString().split("T")[0];
@@ -90,7 +87,6 @@ export async function editAttendanceAction(
       date: baseDate,
       checkIn,
       checkOut,
-      recordedById: memberId,
     });
 
     revalidatePath(`/students/${studentId}`);
@@ -105,6 +101,30 @@ export async function editAttendanceAction(
       success: false,
       message:
         error instanceof Error ? error.message : "Failed to record attendance",
+    };
+  }
+}
+
+export async function createAbsenceAction(
+  studentId: string,
+  data: AbsenceCreateData
+): Promise<ActionResponse> {
+  try {
+    await AttendanceService.createAbsence(studentId, data);
+
+    revalidatePath(`/students/${studentId}`);
+
+    return {
+      success: true,
+      message: "Absence recorded successfully",
+    };
+  } catch (error) {
+    console.error("Failed to create absence:", error);
+
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Failed to record absence",
     };
   }
 }

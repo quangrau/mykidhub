@@ -17,13 +17,15 @@ export default async function StudentLayout({
 }: StudentLayoutProps) {
   const { id } = await params;
   const student = await StudentService.getStudent(id);
+  const name = student.name;
+  const shortName = name.slice(0, 2).toUpperCase();
 
   return (
     <div className="flex flex-col pb-8 gap-x-4 space-y-6">
       <div className="flex items-center gap-4">
         <Avatar className="h-24 w-24">
-          <AvatarImage src="/avatars/01.png" alt="Avatar" />
-          <AvatarFallback>OM</AvatarFallback>
+          <AvatarImage src="/avatars/placeholder.svg" alt="Avatar" />
+          <AvatarFallback>{shortName}</AvatarFallback>
         </Avatar>
         <div className="flex flex-1 flex-wrap items-center justify-between">
           <div className="space-y-1">

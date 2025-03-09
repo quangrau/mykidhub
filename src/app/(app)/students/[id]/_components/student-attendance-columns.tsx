@@ -2,6 +2,7 @@
 
 import { format } from "date-fns";
 
+import { Badge } from "@/components/ui/badge";
 import type { StudentAttendance } from "@/lib/attendance/attendance.types";
 import { AttendanceStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
@@ -17,11 +18,13 @@ export const columns: ColumnDef<StudentAttendance>[] = [
     accessorKey: "checkIn",
     header: "Check in",
     cell: ({ row }) =>
-      row.original.status === AttendanceStatus.ABSENT
-        ? "Absent"
-        : row.original.checkIn
-        ? format(new Date(row.original.checkIn), "HH:mm a")
-        : "-",
+      row.original.status === AttendanceStatus.ABSENT ? (
+        <Badge variant="destructive">Absent</Badge>
+      ) : row.original.checkIn ? (
+        format(new Date(row.original.checkIn), "HH:mm a")
+      ) : (
+        "-"
+      ),
   },
   {
     id: "guardianIn",
@@ -37,11 +40,13 @@ export const columns: ColumnDef<StudentAttendance>[] = [
     accessorKey: "checkOut",
     header: "Check out",
     cell: ({ row }) =>
-      row.original.status === AttendanceStatus.ABSENT
-        ? "-"
-        : row.original.checkOut
-        ? format(new Date(row.original.checkOut), "HH:mm a")
-        : "-",
+      row.original.status === AttendanceStatus.ABSENT ? (
+        <Badge variant="destructive">Absent</Badge>
+      ) : row.original.checkOut ? (
+        format(new Date(row.original.checkOut), "HH:mm a")
+      ) : (
+        "-"
+      ),
   },
   {
     id: "guardianOut",

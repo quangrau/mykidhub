@@ -1,5 +1,3 @@
-import { SquarePlus } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { GuardianWithStatus } from "@/lib/guardian/guardian.types";
+import { useStudentPage } from "../_context/student-page-context";
 import { StudentGuardiansTable } from "./student-guardians-table";
 
 interface Props {
@@ -16,6 +15,8 @@ interface Props {
 }
 
 export default function StudentGuardiansBlock({ guardians }: Props) {
+  const { setOpen } = useStudentPage();
+
   return (
     <Card>
       <CardHeader className="grid grid-cols-2">
@@ -28,10 +29,13 @@ export default function StudentGuardiansBlock({ guardians }: Props) {
           </CardDescription>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost">Copy sign-up link</Button>
-          <Button className="space-x-1">
-            <SquarePlus size={18} />
-            <span>Add Guardian</span>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setOpen("add-guardian");
+            }}
+          >
+            Add Guardian
           </Button>
         </div>
       </CardHeader>
