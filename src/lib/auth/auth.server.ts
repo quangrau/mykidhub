@@ -88,10 +88,22 @@ export const auth = betterAuth({
           userId: userId,
           organizationId: activeOrganizationId!,
         },
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
 
       return {
-        user,
+        user: {
+          ...user,
+          role: member?.role,
+        },
+        organization: member?.organization,
         session: {
           ...session,
           memberId: member?.id,
